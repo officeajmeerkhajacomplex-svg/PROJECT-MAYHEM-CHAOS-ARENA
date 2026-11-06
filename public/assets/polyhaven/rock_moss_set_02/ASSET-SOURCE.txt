@@ -1,0 +1,6 @@
+Poly Haven asset: rock_moss_set_02
+Collection: Pine Forest
+License: CC0
+Source: https://polyhaven.com/a/rock_moss_set_02
+Downloaded by scripts/vendor-polyhaven-assets.mjs
+Optimized: Meshopt geometry, simplified mesh, WebP textures; self-contained model.glb.\n
