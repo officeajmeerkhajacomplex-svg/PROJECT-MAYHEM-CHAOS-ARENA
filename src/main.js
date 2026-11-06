@@ -221,7 +221,7 @@ for(let i=0;i<95;i++){
 }
 
 
-const player={pos:new THREE.Vector3(0,1.7,-7),yaw:0,pitch:0,health:100,score:0,speed:6,grounded:true,stamina:100,sliding:false,slideTimer:0,slideCooldown:0,slideDir:new THREE.Vector3(),slideBoost:0,crouched:false,recoilKick:0};
+const player={pos:new THREE.Vector3(0,1.7,-7),yaw:Math.PI,pitch:0,health:100,score:0,speed:6,grounded:true,stamina:100,sliding:false,slideTimer:0,slideCooldown:0,slideDir:new THREE.Vector3(),slideBoost:0,crouched:false,recoilKick:0};
 camera.position.copy(player.pos);
 const weapons=[
  {name:'AR-01',desc:'ASSAULT RIFLE',mag:30,reserve:150,damage:26,rate:115,spread:.012,recoil:.012,auto:true},
@@ -381,7 +381,7 @@ function animate(now){
  const waterPos=river.geometry.attributes.position;
  for(let i=0;i<waterPos.count;i++){const x=waterPos.getX(i),z=waterPos.getZ(i);waterPos.setY(i,-.48+Math.sin(envClock.time*1.8+x*.16+z*.12)*.035);}
  waterPos.needsUpdate=true;river.geometry.computeVertexNormals();
- for(const child of environment.children){if(child.userData.waterfall)child.position.y=4.7+Math.sin(envClock.time*3+child.position.x)*.08;if(child.userData.mist){child.position.y=.3+Math.abs(Math.sin(envClock.time*.7+child.userData.phase))*1.6;child.position.x+=Math.sin(envClock.time*.35+child.userData.phase)*.002;}}
+ environment.traverse(child=>{if(child.userData.waterfall)child.position.y=4.7+Math.sin(envClock.time*3+child.position.x)*.08;if(child.userData.mist){child.position.y=.3+Math.abs(Math.sin(envClock.time*.7+child.userData.phase))*1.6;child.position.x+=Math.sin(envClock.time*.35+child.userData.phase)*.002;}});
  const mp=moteGeo.attributes.position;for(let i=0;i<moteCount;i++){const phase=motePhases[i];mp.setX(i,motePositions[i*3]+Math.sin(envClock.time*.35+phase)*.18);mp.setY(i,motePositions[i*3+1]+Math.sin(envClock.time*.7+phase)*.24);mp.setZ(i,motePositions[i*3+2]+Math.cos(envClock.time*.28+phase)*.16);}mp.needsUpdate=true;
  if(!paused){movePlayer(dt);updateEnemies(dt,now);if(fireHeld||fireTap)shoot();fireTap=false;}
  renderer.render(scene,camera);
