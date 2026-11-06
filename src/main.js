@@ -7,8 +7,8 @@ const menu = $('menu'), hud = $('hud'), mobile = $('mobile'), pauseScreen = $('p
 const isTouch = matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x9fc9b2);
-scene.fog = new THREE.FogExp2(0x7b9f82, 0.0095);
+scene.background = new THREE.Color(0x9eb8ad);
+scene.fog = new THREE.FogExp2(0x718a7b, 0.012);
 const camera = new THREE.PerspectiveCamera(74, innerWidth/innerHeight, .1, 180);
 camera.rotation.order = 'YXZ';
 const renderer = new THREE.WebGLRenderer({antialias:!isTouch, powerPreference:'high-performance'});
@@ -71,144 +71,75 @@ mats.mud.map=surfaceMaps.dirt;mats.mud.color.set(0xffffff);mats.mud.needsUpdate=
 function box(x,y,z,sx,sy,sz,material,cast=true){
  const m=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),material);m.position.set(x,y,z);m.castShadow=cast;m.receiveShadow=true;scene.add(m);return m;
 }
-// JUNGLE RUSH — handcrafted procedural environment slice
+// PINE FOREST — scanned Poly Haven collection assets replace procedural environment props.
 const environment = new THREE.Group();
 scene.add(environment);
 const envClock = { time: 0 };
-const animatedVeils=[], animatedMist=[], flowingFoam=[];
-const envMaterials = {
-  water: new THREE.MeshPhysicalMaterial({color:0xffffff,map:surfaceMaps.water,roughness:.16,metalness:.12,clearcoat:1,clearcoatRoughness:.08,transparent:true,opacity:.94,envMapIntensity:1.2}),
-  waterFoam: new THREE.MeshBasicMaterial({color:0xb8fff0,transparent:true,opacity:.42}),
-  leafDark: mat(0x164c2d,.92), leafBright:mat(0x3c9148,.86), leafLight:mat(0x72a94b,.8),
-  fern:mat(0x287b43,.9), flowerA:mat(0xffc45c,.65), flowerB:mat(0xf27e75,.65),
-  moss:mat(0x4f8650,.95), ruin:mat(0x777b63,.94), ruinDark:mat(0x454f42,.9),
-  concrete:mat(0x66776a,.85), painted:mat(0x397d70,.6), glass:new THREE.MeshPhysicalMaterial({color:0x6ed9d2,roughness:.12,metalness:.12,transparent:true,opacity:.34}),
-  lamp:new THREE.MeshStandardMaterial({color:0xffd98b,emissive:0xff9b35,emissiveIntensity:2.2}),
-  waterfall:new THREE.MeshBasicMaterial({color:0x9be9e8,transparent:true,opacity:.58,side:THREE.DoubleSide}),
-  firefly:new THREE.MeshBasicMaterial({color:0xbaff80})
-};
-function addMesh(geometry, material, x,y,z, parent=environment, cast=true, receive=true){
-  const mesh=new THREE.Mesh(geometry,material);mesh.position.set(x,y,z);mesh.castShadow=cast;mesh.receiveShadow=receive;parent.add(mesh);return mesh;
-}
-function addBox(x,y,z,sx,sy,sz,material,parent=environment,rotationY=0){
-  const mesh=addMesh(new THREE.BoxGeometry(sx,sy,sz),material,x,y,z,parent);mesh.rotation.y=rotationY;return mesh;
-}
-function addRock(x,y,z,sx,sy,sz,material=mats.stone){
-  const rock=addMesh(new THREE.IcosahedronGeometry(1,1),material,x,y,z);
-  rock.scale.set(sx,sy,sz);rock.rotation.set(Math.random()*.4,Math.random()*Math.PI,Math.random()*.35);return rock;
-}
-function addRuinColumn(x,z,h=4){
-  const g=new THREE.Group();g.position.set(x,0,z);environment.add(g);
-  addMesh(new THREE.CylinderGeometry(.48,.62,h,8),envMaterials.ruin,0,h/2,0,g);
-  addMesh(new THREE.CylinderGeometry(.68,.68,.28,8),envMaterials.ruinDark,0,.22,0,g);
-  addMesh(new THREE.CylinderGeometry(.72,.72,.3,8),envMaterials.ruin,0,h-.12,0,g);
-  addMesh(new THREE.BoxGeometry(.22,.55,.08),envMaterials.moss,.28,h*.55,.48,g,false).rotation.z=-.35;
-  return g;
-}
-function addArch(x,z,width=8,height=5){
-  const g=new THREE.Group();g.position.set(x,0,z);environment.add(g);
-  for(const side of [-1,1]){
-    addMesh(new THREE.BoxGeometry(1.1,height,1.25),envMaterials.ruin,side*width/2,height/2,0,g);
-    addMesh(new THREE.BoxGeometry(1.5,.38,1.5),envMaterials.ruinDark,side*width/2,height-.18,0,g);
-  }
-  const lintel=addMesh(new THREE.BoxGeometry(width+1,.8,1.5),envMaterials.ruin,0,height-.25,0,g);
-  lintel.rotation.z=.025;
-  addMesh(new THREE.BoxGeometry(width*.48,.22,.08),envMaterials.moss,0,height-.68,.79,g,false);
-  return g;
-}
-// A broad forest floor with layered terrain edges instead of visible arena walls.
-const ground=addMesh(new THREE.PlaneGeometry(112,124),mats.ground,0,-.72,12);
-ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;
-const pathMaterial=mat(0xffffff,.98);pathMaterial.map=surfaceMaps.dirt;pathMaterial.map.repeat.set(2,16);pathMaterial.needsUpdate=true;
-const path=addMesh(new THREE.PlaneGeometry(9,62),pathMaterial,0,-.695,10);path.rotation.x=-Math.PI/2;path.rotation.z=.035;
-for(let i=0;i<22;i++){
-  const side=i%2?1:-1, z=-30+i*4.4;
-  addRock(side*(29+Math.random()*7),-.4,z,5+Math.random()*4,3+Math.random()*4,5+Math.random()*4, i%3?mats.stone:envMaterials.ruinDark);
-}
-// Winding river ribbon with shallow, visible banks.
-const riverCurve=new THREE.CatmullRomCurve3([
-  new THREE.Vector3(-48,0,27),new THREE.Vector3(-31,0,24),new THREE.Vector3(-16,0,27),
-  new THREE.Vector3(0,0,22),new THREE.Vector3(17,0,25),new THREE.Vector3(33,0,19),new THREE.Vector3(48,0,22)
-]);
-const riverVertices=[],riverIndices=[],riverUvs=[],riverSegments=100;
-for(let i=0;i<=riverSegments;i++){
-  const t=i/riverSegments,p=riverCurve.getPoint(t),tan=riverCurve.getTangent(t),nx=-tan.z,nz=tan.x;
-  for(const side of [-1,1]){riverVertices.push(p.x+nx*side*2.45,-.48,p.z+nz*side*2.45);riverUvs.push(t,side*.5+.5);}
-  if(i<riverSegments){const a=i*2;riverIndices.push(a,a+1,a+2,a+1,a+3,a+2);}
-}
-const riverGeo=new THREE.BufferGeometry();riverGeo.setAttribute('position',new THREE.Float32BufferAttribute(riverVertices,3));riverGeo.setAttribute('uv',new THREE.Float32BufferAttribute(riverUvs,2));riverGeo.setIndex(riverIndices);riverGeo.computeVertexNormals();
-const river=addMesh(riverGeo,envMaterials.water,0,0,0);river.material.side=THREE.DoubleSide;river.userData.water=true;
-for(let i=0;i<45;i++){
-  const t=Math.random(),p=riverCurve.getPoint(t),tan=riverCurve.getTangent(t);
-  const foam=addMesh(new THREE.SphereGeometry(.08+Math.random()*.13,6,5),envMaterials.waterFoam,p.x+(Math.random()-.5)*3,-.43,p.z+(Math.random()-.5)*3,environment,false);
-  foam.scale.set(1.8,.25,.7);foam.userData.flowOffset=Math.random()*6;foam.userData.flowBaseX=foam.position.x;foam.userData.flowBaseZ=foam.position.z;flowingFoam.push(foam);
-}
-for(let i=0;i<42;i++){
-  const t=Math.random(),p=riverCurve.getPoint(t),tan=riverCurve.getTangent(t);
-  const bank=addRock(p.x+(Math.random()-.5)*6,-.35,p.z+(Math.random()-.5)*5,.45+Math.random()*.8,.25+Math.random()*.4,.5+Math.random()*.8,i%2?mats.stone:envMaterials.moss);
-}
-// Stone footbridge across the river, with chunky rails and individual deck slabs.
-const bridge=new THREE.Group();bridge.position.set(0,-.12,23);environment.add(bridge);
-addMesh(new THREE.BoxGeometry(4.4,.48,9.5),envMaterials.ruin,0,0,0,bridge);
-for(let i=0;i<11;i++)addMesh(new THREE.BoxGeometry(4.15,.12,.78),i%2?envMaterials.ruin:envMaterials.ruinDark,0,.3,-4.35+i*.86,bridge);
-for(const side of [-1,1]){
-  addMesh(new THREE.BoxGeometry(.32,1.05,9.5),envMaterials.ruin,side*2.05,.68,0,bridge);
-  for(let i=0;i<5;i++)addMesh(new THREE.BoxGeometry(.48,.18,.42),envMaterials.ruinDark,side*2.05,1.22,-3.8+i*1.9,bridge);
-}
-// Ancient temple approach, broken columns, carved lintels and mossy rubble.
-addArch(-12,5,9,5.2);addRuinColumn(-17,8,3.2);addRuinColumn(-7,8,4.1);addRuinColumn(-19,17,2.4);
-addBox(-12,.1,12,13,.55,1.3,envMaterials.ruin);
-for(let i=0;i<24;i++){const x=-22+Math.random()*19,z=1+Math.random()*23;addRock(x,-.28,z,.5+Math.random(),.35+Math.random()*.7,.55+Math.random(),i%2?envMaterials.ruin:envMaterials.moss);}
-for(let i=0;i<8;i++){const x=-20+i*2.2;const glyph=addBox(x,1.8,4,.055,1.2,.045,envMaterials.gold);glyph.material=mat(0x8a9a72,.9);}
-// Research outpost on the far bank: modular walls, observation glass, antenna and warning lamps.
-const lab=new THREE.Group();lab.position.set(13,0,39);lab.rotation.y=-.16;environment.add(lab);
-addMesh(new THREE.BoxGeometry(13,4.8,8),envMaterials.concrete,0,2.4,0,lab);
-addMesh(new THREE.BoxGeometry(13.2,.35,8.2),envMaterials.ruinDark,0,4.85,0,lab);
-addMesh(new THREE.BoxGeometry(8,2.4,.16),envMaterials.glass,0,2.8,4.08,lab,false);
-for(let i=0;i<4;i++)addMesh(new THREE.BoxGeometry(.09,2.5,.12),envMaterials.painted,-3+i*2,2.8,4.18,lab,false);
-addMesh(new THREE.BoxGeometry(2.4,2.9,.35),envMaterials.metal,0,1.45,4.16,lab);
-addMesh(new THREE.BoxGeometry(2.1,.18,.08),envMaterials.lamp,0,3.1,4.38,lab,false);
-for(const x of [-5.5,5.5]){addMesh(new THREE.CylinderGeometry(.12,.16,5.5,8),envMaterials.metal,x,5.1,-2.6,lab);addMesh(new THREE.SphereGeometry(.22,8,6),envMaterials.lamp,x,7.9,-2.6,lab,false);}
-addMesh(new THREE.CylinderGeometry(.08,.08,4,8),envMaterials.metal,4.7,7,0,lab).rotation.z=.3;
-addMesh(new THREE.SphereGeometry(.3,8,6),envMaterials.lamp,4.7,9,0,lab,false);
-// Cave mouth and layered rock overhang on the left side of the route.
-const cave=new THREE.Group();cave.position.set(-25,0,31);cave.rotation.y=.22;environment.add(cave);
-addMesh(new THREE.SphereGeometry(1,12,8),envMaterials.ruinDark,0,2.6,0,cave).scale.set(5.4,3.4,4.2);
-addMesh(new THREE.SphereGeometry(1,12,8),mat(0x071d1b,1),0,1.4,1.7,cave,false).scale.set(3.2,1.65,2.7);
-addMesh(new THREE.BoxGeometry(6.7,.35,1.2),envMaterials.ruin,-.2,.3,2,cave);
-for(let i=0;i<8;i++)addRock(-29+Math.random()*8,-.35,28+Math.random()*7,.8+Math.random(),.7+Math.random(),.9+Math.random(),envMaterials.moss);
-// Distant waterfall spilling down the jungle escarpment, with animated veil and mist.
-const falls=new THREE.Group();falls.position.set(25,0,10);environment.add(falls);
-for(let i=0;i<3;i++){
-  const veil=addMesh(new THREE.PlaneGeometry(2.1+i*.25,10-i*.4),envMaterials.waterfall,(i-1)*1.65,4.7,-.1,falls,false);
-  veil.userData.waterfall=true;veil.rotation.y=(i-1)*.12;animatedVeils.push(veil);
-}
-addRock(0,-.4,-.3,7,2.2,3.2,mats.stone).position.x=25;
-for(let i=0;i<12;i++){const splash=addMesh(new THREE.SphereGeometry(.22+Math.random()*.35,7,5),envMaterials.waterFoam,24+(Math.random()-.5)*5,.1+Math.random()*2,9+(Math.random()-.5)*3,environment,false);splash.userData.mist=true;splash.userData.phase=Math.random()*6.28;splash.userData.baseX=splash.position.x;animatedMist.push(splash);}
-// Poly Haven models are vendored into public/assets by the repository workflow.
-// GLTFLoader resolves each model's texture files locally relative to model.gltf.
-async function loadPolyHavenAsset(assetId, placements, targetHeight) {
-  try {
-    const modelUrl = `/assets/polyhaven/${assetId}/model.gltf`;
-    const loader = new GLTFLoader();
-    const gltf = await loader.loadAsync(modelUrl);
-    const prototype = gltf.scene;
-    prototype.updateMatrixWorld(true);
-    const bounds = new THREE.Box3().setFromObject(prototype);
-    const size = bounds.getSize(new THREE.Vector3());
-    if (!size.y) throw new Error(`Loaded ${assetId} has no measurable height`);
-    const baseScale = targetHeight / size.y;
+const groundMaterial = new THREE.MeshStandardMaterial({color:0x536b58,roughness:1});
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(76,96),groundMaterial);
+ground.rotation.x=-Math.PI/2;
+ground.position.set(0,-.72,12);
+ground.receiveShadow=true;
+environment.add(ground);
 
+// Environment props come exclusively from the locally vendored Pine Forest collection.
+// Load the complete locally vendored Pine Forest model collection.
+async function loadPineForestCollection() {
+  const loader = new GLTFLoader();
+  try {
+    const response = await fetch('/assets/polyhaven/collection-manifest.json', { cache: 'no-cache' });
+    if (!response.ok) throw new Error(`Pine Forest manifest request failed: HTTP ${response.status}`);
+    const manifest = await response.json();
+    if (manifest.collection !== 'pine_forest' || !Array.isArray(manifest.models) || !manifest.models.length) {
+      throw new Error('Pine Forest collection manifest is empty or has the wrong collection ID');
+    }
+    const models = [];
+    for (const entry of manifest.models) {
+      try {
+        const gltf = await loader.loadAsync(`/assets/polyhaven/${entry.id}/model.gltf`);
+        const prototype = gltf.scene;
+        prototype.updateMatrixWorld(true);
+        const bounds = new THREE.Box3().setFromObject(prototype);
+        const size = bounds.getSize(new THREE.Vector3());
+        const height = Math.max(size.x, size.y, size.z);
+        if (!height || !Number.isFinite(height)) throw new Error('Invalid model dimensions');
+        const text = `${entry.id} ${entry.name || ''} ${entry.category || ''} ${(entry.tags || []).join(' ')}`.toLowerCase();
+        const kind = /tree|pine|conifer|spruce|fir/.test(text) ? 'tree'
+          : /rock|boulder|stone/.test(text) ? 'rock'
+          : /fern|grass|moss|flower|shrub|bush|plant|vegetation/.test(text) ? 'understory'
+          : /log|stump|wood|branch/.test(text) ? 'wood' : 'prop';
+        models.push({ entry, prototype, bounds, height, kind });
+      } catch (error) {
+        console.error(`Pine Forest model failed to load: ${entry.id}`, error);
+      }
+    }
+    if (!models.length) throw new Error('No Pine Forest models loaded successfully');
+    let seed = 721;
+    const random = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+    const placements = [];
+    for (const model of models) {
+      const count = model.kind === 'tree' ? 8 : model.kind === 'understory' ? 5 : model.kind === 'rock' ? 4 : 3;
+      for (let i = 0; i < count; i++) {
+        let x = 0, z = 0;
+        for (let attempt = 0; attempt < 12; attempt++) {
+          x = -25 + random() * 50; z = -19 + random() * 65;
+          if (Math.abs(x) > 6.2) break;
+        }
+        const targetHeight = model.kind === 'tree' ? 8 + random() * 5
+          : model.kind === 'understory' ? .65 + random() * 1.7
+          : model.kind === 'rock' ? .8 + random() * 2.4
+          : model.kind === 'wood' ? 1.2 + random() * 2.5 : 1.5 + random() * 3;
+        placements.push({ model, x, z, scale: targetHeight / model.height, rotation: random() * Math.PI * 2 });
+      }
+    }
     for (const placement of placements) {
-      const instance = prototype.clone(true);
-      const scale = baseScale * (placement.scale || 1);
-      instance.scale.setScalar(scale);
-      instance.position.set(placement.x, -bounds.min.y * scale, placement.z);
-      instance.rotation.y = placement.rotation || 0;
+      const instance = placement.model.prototype.clone(true);
+      instance.scale.setScalar(placement.scale);
+      instance.position.set(placement.x, -placement.model.bounds.min.y * placement.scale, placement.z);
+      instance.rotation.y = placement.rotation;
       instance.traverse((node) => {
         if (!node.isMesh) return;
-        node.castShadow = !isTouch;
-        node.receiveShadow = true;
+        node.castShadow = !isTouch; node.receiveShadow = true;
         const materials = Array.isArray(node.material) ? node.material : [node.material];
         for (const material of materials) {
           if (material.map) material.map.colorSpace = THREE.SRGBColorSpace;
@@ -218,69 +149,16 @@ async function loadPolyHavenAsset(assetId, placements, targetHeight) {
       });
       environment.add(instance);
     }
-    console.info(`Local Poly Haven model loaded: ${assetId} (${placements.length} instance(s))`);
+    console.info(`Pine Forest instantiated: ${models.length}/${manifest.models.length} models, ${placements.length} placements`);
+    const toastEl = $('toast');
+    if (toastEl) toastEl.textContent = `PINE FOREST // ${models.length} ASSETS LOADED`;
   } catch (error) {
-    console.error(`Local model missing or failed to load: ${assetId}. Run the Vendor Poly Haven game assets workflow.`, error);
+    console.error('Pine Forest collection failed to load', error);
+    const toastEl = $('toast');
+    if (toastEl) toastEl.textContent = 'ENVIRONMENT ASSETS FAILED TO LOAD';
   }
 }
-{
-  loadPolyHavenAsset('shrub_02', [
-    {x:-9,z:-13,scale:1.15,rotation:.4},{x:9,z:-11,scale:1.05,rotation:2.1},
-    {x:-10,z:4,scale:1.25,rotation:1.2},{x:10,z:8,scale:1.1,rotation:2.8},
-    {x:-8,z:29,scale:1.2,rotation:.8},{x:9,z:31,scale:1.3,rotation:2.4}
-  ], 2.2);
-  loadPolyHavenAsset('shrub_03', [
-    {x:-18,z:-8,scale:1.05,rotation:1.1},{x:18,z:-5,scale:1.15,rotation:2.4},
-    {x:-19,z:12,scale:1.2,rotation:3.1},{x:19,z:18,scale:1.1,rotation:.2},
-    {x:-18,z:35,scale:1.3,rotation:2.2},{x:18,z:39,scale:1.25,rotation:4.1}
-  ], 2.4);
-  loadPolyHavenAsset('fern_02', [
-    {x:-6.5,z:-12,scale:.75,rotation:.3},{x:6.8,z:-9,scale:.7,rotation:1.7},
-    {x:-7,z:13,scale:.8,rotation:2.1},{x:7.5,z:17,scale:.72,rotation:4.2},
-    {x:-23,z:22,scale:.85,rotation:1.1},{x:22,z:26,scale:.8,rotation:3.4}
-  ], 1.0);
-  loadPolyHavenAsset('grass_medium_02', [
-    {x:-5.7,z:-17,scale:1.2,rotation:.2},{x:5.8,z:-15,scale:1.25,rotation:2.2},
-    {x:-6.2,z:20,scale:1.15,rotation:4.1},{x:6.3,z:25,scale:1.2,rotation:1.4},
-    {x:-18,z:34,scale:1.3,rotation:3.2},{x:18,z:36,scale:1.2,rotation:.7}
-  ], .55);
-  loadPolyHavenAsset('rock_07', [
-    {x:-6.2,z:-4,scale:1.8,rotation:.5},{x:6.5,z:1,scale:1.6,rotation:2.2},
-    {x:-8.2,z:24,scale:1.7,rotation:1.2},{x:8.4,z:27,scale:1.9,rotation:3.4}
-  ], .75);
-  // Scanned tree canopies replace the old cylinder/cone tree silhouettes.
-  loadPolyHavenAsset('island_tree_02', [
-    {x:-25,z:-8,scale:.92,rotation:.65},{x:25,z:-1,scale:.88,rotation:2.2}
-  ], 7.2);
-  loadPolyHavenAsset('island_tree_01', [
-    {x:-26,z:34,scale:.9,rotation:1.4},{x:26,z:39,scale:.86,rotation:3.5}
-  ], 7.0);
-}
-// Hanging vines around ruins and canopy edges.
-for(let i=0;i<22;i++){
-  const x=-24+Math.random()*48,z=-16+Math.random()*43,h=1.5+Math.random()*3;
-  const vine=addMesh(new THREE.CylinderGeometry(.018,.025,h,5),envMaterials.fern,x,4.7-h/2,z,environment,false);
-  vine.rotation.z=(Math.random()-.5)*.18;
-}
-// Ambient insects / drifting spores / fireflies. Kept lightweight for mobile.
-const moteCount=isTouch?90:180,motePositions=new Float32Array(moteCount*3),motePhases=[];
-for(let i=0;i<moteCount;i++){motePositions[i*3]=(Math.random()-.5)*62;motePositions[i*3+1]=.4+Math.random()*8;motePositions[i*3+2]=-22+Math.random()*65;motePhases.push(Math.random()*6.28);}
-const moteGeo=new THREE.BufferGeometry();moteGeo.setAttribute('position',new THREE.BufferAttribute(motePositions,3));
-const motes=new THREE.Points(moteGeo,new THREE.PointsMaterial({color:0xd7f7a0,size:.055,transparent:true,opacity:.72,sizeAttenuation:true}));
-environment.add(motes);
-// Warm shafts of sunlight between canopy gaps, using transparent tapered beams.
-const sunbeams=new THREE.Group();environment.add(sunbeams);
-for(let i=0;i<7;i++){
-  const beam=addMesh(new THREE.CylinderGeometry(.08,1.5,18,7,1,true),new THREE.MeshBasicMaterial({color:0xffe8b0,transparent:true,opacity:.055,depthWrite:false,side:THREE.DoubleSide}),-19+i*6,8,-13+(i%3)*13,sunbeams,false);
-  beam.rotation.z=.12;beam.rotation.x=.08;
-}
-// Scatter small stones and broad leaf clumps to soften the path edges.
-for(let i=0;i<95;i++){
-  const x=(Math.random()-.5)*22,z=-22+Math.random()*54;
-  if(Math.abs(x)<4.8)continue;
-  addRock(x,-.38,z,.18+Math.random()*.38,.12+Math.random()*.24,.2+Math.random()*.4,i%3?envMaterials.moss:mats.mud);
-}
-
+loadPineForestCollection();
 
 const player={pos:new THREE.Vector3(0,1.7,-7),yaw:Math.PI,pitch:0,health:100,score:0,speed:6,grounded:true,stamina:100,sliding:false,slideTimer:0,slideCooldown:0,slideDir:new THREE.Vector3(),slideBoost:0,crouched:false,recoilKick:0};
 camera.position.copy(player.pos);
@@ -438,14 +316,6 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden&&!paused)pa
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,isTouch?1.5:2));});
 function animate(now){
  requestAnimationFrame(animate);const dt=Math.min((now-lastFrame)/1000,.04);lastFrame=now;
- envClock.time+=dt;
- surfaceMaps.water.offset.x=(envClock.time*.018)%1;
- surfaceMaps.water.offset.y=(envClock.time*.045)%1;
-
- for(const veil of animatedVeils)veil.position.y=4.7+Math.sin(envClock.time*3+veil.position.x)*.08;
- for(const puff of animatedMist){puff.position.y=.3+Math.abs(Math.sin(envClock.time*.7+puff.userData.phase))*1.6;puff.position.x=puff.userData.baseX+Math.sin(envClock.time*.35+puff.userData.phase)*.3;}
- for(const foam of flowingFoam){foam.position.x=foam.userData.flowBaseX+Math.sin(envClock.time*1.4+foam.userData.flowOffset)*.35;foam.position.z=foam.userData.flowBaseZ+Math.cos(envClock.time*1.1+foam.userData.flowOffset)*.45;}
- const mp=moteGeo.attributes.position;for(let i=0;i<moteCount;i++){const phase=motePhases[i];mp.setX(i,motePositions[i*3]+Math.sin(envClock.time*.35+phase)*.18);mp.setY(i,motePositions[i*3+1]+Math.sin(envClock.time*.7+phase)*.24);mp.setZ(i,motePositions[i*3+2]+Math.cos(envClock.time*.28+phase)*.16);}mp.needsUpdate=true;
  if(!paused){movePlayer(dt);updateEnemies(dt,now);if(fireHeld||fireTap)shoot();fireTap=false;}
  renderer.render(scene,camera);
 }
