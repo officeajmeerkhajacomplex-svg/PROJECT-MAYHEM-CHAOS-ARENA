@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 
 const $ = (id) => document.getElementById(id);
 const game = $('game');
@@ -86,6 +87,7 @@ environment.add(ground);
 // Load the complete locally vendored Pine Forest model collection.
 async function loadPineForestCollection() {
   const loader = new GLTFLoader();
+  loader.setMeshoptDecoder(MeshoptDecoder);
   try {
     const response = await fetch('/assets/polyhaven/collection-manifest.json', { cache: 'no-cache' });
     if (!response.ok) throw new Error(`Pine Forest manifest request failed: HTTP ${response.status}`);
@@ -96,7 +98,7 @@ async function loadPineForestCollection() {
     const models = [];
     for (const entry of manifest.models) {
       try {
-        const gltf = await loader.loadAsync(`/assets/polyhaven/${entry.id}/model.gltf`);
+        const gltf = await loader.loadAsync(`/assets/polyhaven/${entry.id}/model.glb`);
         const prototype = gltf.scene;
         prototype.updateMatrixWorld(true);
         const bounds = new THREE.Box3().setFromObject(prototype);
