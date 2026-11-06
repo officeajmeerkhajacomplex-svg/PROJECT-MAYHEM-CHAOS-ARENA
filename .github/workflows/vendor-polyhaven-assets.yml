@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'scripts/vendor-polyhaven-assets.mjs'
+      - 'src/main.js'
       - '.github/workflows/vendor-polyhaven-assets.yml'
   workflow_dispatch:
 
