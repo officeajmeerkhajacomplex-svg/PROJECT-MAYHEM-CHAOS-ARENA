@@ -38,5 +38,14 @@ jobs:
             echo "Assets already up to date"
           else
             git commit -m "Vendor Poly Haven models and textures"
-            git push
+            for attempt in 1 2 3; do
+              git pull --rebase origin main
+              if git push origin HEAD:main; then
+                exit 0
+              fi
+              echo "Push attempt $attempt failed; retrying after rebasing"
+              sleep $((attempt * 5))
+            done
+            echo "Could not push vendored assets after three attempts"
+            exit 1
           fi
