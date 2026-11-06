@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
   <meta name="theme-color" content="#101a1b" />
   <meta name="description" content="PROJECT MAYHEM: CHAOS ARENA — browser-based sci-fi FPS." />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <link rel="manifest" href="/manifest.webmanifest" />
   <title>PROJECT MAYHEM // CHAOS ARENA</title>
   <link rel="stylesheet" href="/src/style.css" />
 </head>
@@ -38,6 +40,7 @@
     </div>
   </div>
   <div id="pause" class="screen hidden"><div class="menu-panel compact"><div class="eyebrow">COMBAT PAUSED</div><h2>ARENA <span>ON HOLD</span></h2><button id="resume">RESUME</button></div></div>
+  <script>if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(console.error));</script>
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>
