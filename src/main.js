@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
+import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 
 const $ = (id) => document.getElementById(id);
 const game = $('game');
@@ -11,47 +12,6 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xa9c9d2);
 scene.fog = new THREE.FogExp2(0x9bb8ad, 0.0068);
 
-// Lightweight procedural Jungle Rush sky: tropical blue zenith, warm humid
-// horizon, soft high clouds, and a visible sun glow. No network assets/shaders.
-function makeJungleSky(){
- const canvas=document.createElement('canvas');canvas.width=2048;canvas.height=1024;
- const ctx=canvas.getContext('2d');
- const gradient=ctx.createLinearGradient(0,0,0,1024);
- gradient.addColorStop(0,'#2876b5');
- gradient.addColorStop(.34,'#65add0');
- gradient.addColorStop(.68,'#b8d9d6');
- gradient.addColorStop(1,'#f2d2a5');
- ctx.fillStyle=gradient;ctx.fillRect(0,0,2048,1024);
- // Deterministic, layered cloud banks; restrained opacity keeps the sky readable.
- let seed=82471;const rand=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};
- for(let i=0;i<76;i++){
-  const x=rand()*2048,y=180+rand()*390,rx=45+rand()*115,ry=13+rand()*31;
-  const cloud=ctx.createRadialGradient(x,y,2,x,y,rx);
-  cloud.addColorStop(0,'rgba(255,255,247,.58)');
-  cloud.addColorStop(.55,'rgba(246,251,246,.30)');
-  cloud.addColorStop(1,'rgba(240,249,248,0)');
-  ctx.fillStyle=cloud;ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2);ctx.fill();
-  for(let b=0;b<3;b++){
-   const bx=x+(rand()-.5)*rx,by=y+(rand()-.5)*ry;
-   ctx.fillStyle='rgba(255,255,250,.12)';ctx.beginPath();
-   ctx.ellipse(bx,by,rx*(.25+rand()*.22),ry*(.45+rand()*.5),0,0,Math.PI*2);ctx.fill();
-  }
- }
- const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;
- const dome=new THREE.Mesh(new THREE.SphereGeometry(170,40,24),new THREE.MeshBasicMaterial({map:texture,side:THREE.BackSide,depthWrite:false,fog:false}));
- dome.frustumCulled=false;dome.renderOrder=-1000;scene.add(dome);
- // A soft sun disc and halo aligned with the directional key light.
- const sunCanvas=document.createElement('canvas');sunCanvas.width=sunCanvas.height=256;
- const sunCtx=sunCanvas.getContext('2d'),glow=sunCtx.createRadialGradient(128,128,5,128,128,126);
- glow.addColorStop(0,'rgba(255,255,236,1)');glow.addColorStop(.12,'rgba(255,245,205,.95)');
- glow.addColorStop(.28,'rgba(255,224,165,.42)');glow.addColorStop(1,'rgba(255,219,160,0)');
- sunCtx.fillStyle=glow;sunCtx.fillRect(0,0,256,256);
- const sunTexture=new THREE.CanvasTexture(sunCanvas);sunTexture.colorSpace=THREE.SRGBColorSpace;
- const sunSprite=new THREE.Sprite(new THREE.SpriteMaterial({map:sunTexture,transparent:true,depthWrite:false,fog:false}));
- sunSprite.position.set(-25,40,-10).normalize().multiplyScalar(135);sunSprite.scale.set(30,30,1);sunSprite.renderOrder=-900;scene.add(sunSprite);
- return dome;
-}
-const jungleSky=makeJungleSky();
 const camera = new THREE.PerspectiveCamera(74, innerWidth/innerHeight, .1, 180);
 camera.rotation.order = 'YXZ';
 const renderer = new THREE.WebGLRenderer({antialias:!isTouch, powerPreference:'high-performance'});
@@ -61,6 +21,25 @@ renderer.shadowMap.enabled = !isTouch;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 game.appendChild(renderer.domElement);
+
+// Real photographic 360-degree HDRI sky and image-based environment lighting.
+// The CC0 Poly Haven asset is vendored locally so the scene also works offline.
+const pmremGenerator = new THREE.PMREMGenerator(renderer);
+pmremGenerator.compileEquirectangularShader();
+new RGBELoader().load('/assets/hdri/qwantani_mid_morning_puresky_2k.hdr', (hdr) => {
+  hdr.mapping = THREE.EquirectangularReflectionMapping;
+  scene.background = hdr;
+  const environmentMap = pmremGenerator.fromEquirectangular(hdr).texture;
+  scene.environment = environmentMap;
+  scene.environmentIntensity = 0.72;
+  scene.backgroundIntensity = 0.92;
+  pmremGenerator.dispose();
+  console.info('Jungle Rush HDRI loaded: Poly Haven Qwantani Mid Morning (Pure Sky), CC0');
+}, undefined, (error) => {
+  console.error('HDRI failed to load; using fallback sky color', error);
+  scene.background = new THREE.Color(0x83b9d0);
+  pmremGenerator.dispose();
+});
 
 scene.add(new THREE.HemisphereLight(0xd7f4df,0x34432d,1.9));
 scene.add(new THREE.AmbientLight(0x91bca0,0.28));
@@ -414,7 +393,7 @@ function animate(now){
   for(const wind of windObjects)wind.object.rotation.z=Math.sin(now*.00045+wind.phase)*wind.strength;
  if(!paused){movePlayer(dt);updateEnemies(dt,now);if(fireHeld||fireTap)shoot();fireTap=false;}
  if(now-lastHudUpdate>=100){updateHud();lastHudUpdate=now;}
- jungleSky.position.copy(camera.position);
+
  renderer.render(scene,camera);
 }
 updateHud();requestAnimationFrame(animate);
