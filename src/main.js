@@ -239,8 +239,9 @@ async function loadPolyHavenAsset(assetId, placements, targetHeight) {
       environment.add(instance);
     }
   } catch (error) {
-    // The handcrafted fallback vegetation remains visible if the CDN is offline.
-    console.info(`Optional world asset skipped: ${assetId}`, error);
+    // Tree geometry has intentionally been removed; surface a clear error if the hero model fails.
+    if (assetId === 'island_tree_02') console.error('Island Tree 02 could not be loaded. Check the Poly Haven API/CDN connection.', error);
+    else console.info(`Optional world asset skipped: ${assetId}`, error);
   }
 }
 if (navigator.onLine) {
