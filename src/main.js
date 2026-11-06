@@ -285,21 +285,24 @@ const smgFlashCore=new THREE.Mesh(new THREE.SphereGeometry(.04,8,8),new THREE.Me
 const smgFlashFlare=new THREE.Mesh(new THREE.ConeGeometry(.035,.15,8),new THREE.MeshBasicMaterial({color:0xff8a32}));smgFlashFlare.rotation.x=-Math.PI/2;smgFlashFlare.position.z=-.075;smgMuzzleFlash.add(smgFlashFlare);
 const smgMuzzleLight=new THREE.PointLight(0xffa04a,0,3);smgMuzzleFlash.add(smgMuzzleLight);smgMuzzleFlash.visible=false;
 const smgLoader=new GLTFLoader();smgLoader.setMeshoptDecoder(MeshoptDecoder);
-smgLoader.load('/assets/weapons/fps_animated_smg/model.glb',gltf=>{
- const modelRoot=new THREE.Group();modelRoot.add(gltf.scene);modelRoot.updateMatrixWorld(true);
- const bounds=new THREE.Box3().setFromObject(modelRoot),size=bounds.getSize(new THREE.Vector3()),center=bounds.getCenter(new THREE.Vector3());
- const longest=Math.max(size.x,size.y,size.z);
- if(!longest)throw new Error('Downloaded SMG model has empty geometry');
- gltf.scene.position.sub(center);gltf.scene.scale.setScalar(.88/longest);
- smgPivot.add(modelRoot);smgPivot.userData.authoredModel=modelRoot;
- if(gltf.animations?.length){
-  smgMixer=new THREE.AnimationMixer(modelRoot);
-  for(const clip of gltf.animations)smgActions[clip.name.toLowerCase()]=smgMixer.clipAction(clip);
-  console.info('SMG animation clips:',gltf.animations.map(c=>c.name));
- }
- smgPivot.children.filter(child=>child!==modelRoot&&child!==smgMuzzleFlash).forEach(child=>child.visible=false);
- console.info('Sketchfab fps animated smg loaded');
-},undefined,error=>console.info('SMG uses the built-in placeholder until its authorized GLB is added:',error.message));
+fetch('/assets/weapons/fps_animated_smg/manifest.json').then(response=>response.ok?response.json():null).then(manifest=>{
+ if(!manifest?.modelAvailable){console.info('SMG placeholder active; awaiting the user-provided Sketchfab model archive.');return;}
+ smgLoader.load('/assets/weapons/fps_animated_smg/model.glb',gltf=>{
+  const modelRoot=new THREE.Group();modelRoot.add(gltf.scene);modelRoot.updateMatrixWorld(true);
+  const bounds=new THREE.Box3().setFromObject(modelRoot),size=bounds.getSize(new THREE.Vector3()),center=bounds.getCenter(new THREE.Vector3());
+  const longest=Math.max(size.x,size.y,size.z);
+  if(!longest)throw new Error('Downloaded SMG model has empty geometry');
+  gltf.scene.position.sub(center);gltf.scene.scale.setScalar(.88/longest);
+  smgPivot.add(modelRoot);smgPivot.userData.authoredModel=modelRoot;
+  if(gltf.animations?.length){
+   smgMixer=new THREE.AnimationMixer(modelRoot);
+   for(const clip of gltf.animations)smgActions[clip.name.toLowerCase()]=smgMixer.clipAction(clip);
+   console.info('SMG animation clips:',gltf.animations.map(c=>c.name));
+  }
+  smgPivot.children.filter(child=>child!==modelRoot&&child!==smgMuzzleFlash).forEach(child=>child.visible=false);
+  console.info('Sketchfab fps animated smg loaded');
+ },undefined,error=>console.error('Sketchfab SMG model failed to load:',error));
+}).catch(error=>console.warn('SMG asset manifest could not be read:',error));
 function playSmgAnimation(kind){
  if(!smgMixer)return;
  const keys=Object.keys(smgActions),match=keys.find(key=>kind==='fire'?/fire|shoot|shot/.test(key):/reload/.test(key));
