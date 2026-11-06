@@ -414,6 +414,7 @@ function animate(now){
   for(const wind of windObjects)wind.object.rotation.z=Math.sin(now*.00045+wind.phase)*wind.strength;
  if(!paused){movePlayer(dt);updateEnemies(dt,now);if(fireHeld||fireTap)shoot();fireTap=false;}
  if(now-lastHudUpdate>=100){updateHud();lastHudUpdate=now;}
- jungleSky.position.copy(camera.position);\n renderer.render(scene,camera);
+ jungleSky.position.copy(camera.position);
+ renderer.render(scene,camera);
 }
 updateHud();requestAnimationFrame(animate);
