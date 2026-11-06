@@ -79,7 +79,7 @@ scene.add(environment);
 const windObjects = [];
 const floorMaterial = new THREE.MeshStandardMaterial({color:0xffffff,roughness:1,map:surfaceMaps.ground});
 const trailMaterial = new THREE.MeshStandardMaterial({color:0x59452e,roughness:1,map:surfaceMaps.dirt});
-const streamMaterial = new THREE.MeshStandardMaterial({color:0x8bc8c0,roughness:.2,transparent:true,opacity:.82});
+const streamMaterial = new THREE.MeshStandardMaterial({color:0xffffff,map:surfaceMaps.water,roughness:.2,metalness:.08,transparent:true,opacity:.84});
 
 function forestTerrainHeight(x,z){
  return .24*Math.sin(x*.17+z*.055)+.18*Math.sin(z*.13-x*.08)
