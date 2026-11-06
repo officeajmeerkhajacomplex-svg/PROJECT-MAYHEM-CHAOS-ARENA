@@ -300,6 +300,12 @@ if (navigator.onLine) {
     {x:-6.2,z:-4,scale:1.8,rotation:.5},{x:6.5,z:1,scale:1.6,rotation:2.2},
     {x:-8.2,z:24,scale:1.7,rotation:1.2},{x:8.4,z:27,scale:1.9,rotation:3.4}
   ], .75);
+  // Island Tree 02: large hero tree dressing on the outer jungle ridgeline.
+  loadPolyHavenAsset('island_tree_02', [
+    {x:-24.5,z:-12,scale:1.05,rotation:.65},
+    {x:24.2,z:-3,scale:1.0,rotation:2.45},
+    {x:-25.5,z:35,scale:.92,rotation:1.8}
+  ], 7.2);
 }
 
 // Hanging vines around ruins and canopy edges.
