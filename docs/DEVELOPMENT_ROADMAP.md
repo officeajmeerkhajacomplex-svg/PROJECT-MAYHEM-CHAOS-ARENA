@@ -81,11 +81,14 @@ Not yet implemented: the full campaign and regions, mission/checkpoint system, l
 ## Verified asset pipeline and next source packs
 
 - **Poly Haven Pine Forest (imported):** 16 CC0 models, optimized into self-contained Meshopt/WebP GLBs; 84.37 MiB total. All 16 files are committed under `public/assets/polyhaven`, and the vendor workflow completed successfully.
+- **Scale and placement pass (committed):** tree canopy references 13.5 m; saplings 1.8–3.1 m; ferns, grass and moss use sub-metre targets; rocks and fallen wood are scaled from measured GLB bounds. Placement excludes the main trail and stream corridor. Terrain height is shared by the environment, player and enemy ground contact.
+- **Forest composition pass (committed):** undulating forest floor, curved dirt trail, textured woodland stream, natural placement zones, fog/lighting refinement and subtle wind sway on tree assets.
+- **Art-direction gap to resolve:** the source skill's Jungle Rush is a tropical region with waterfalls, river, caves, bridges, ancient ruins and abandoned research facilities. Pine Forest is a separate conifer woodland collection. Preserve Pine Forest as its own biome/test map and import a separate tropical asset collection (Poly Haven's Smuggler's Cove collection and tropical plant models are candidates) for the Jungle Rush campaign region.
 - **ambientCG (planned):** CC0 PBR material maps for terrain, concrete, metal, wood, and facility surfaces. Download and bundle selected maps locally; do not fetch textures from a live API during gameplay.
 - **Kenney Nature Kit / modular kits (planned):** individual asset-pack pages identify CC0 terms. Use the Nature Kit for stylized secondary foliage/props and suitable modular kits for outposts or factory props after validating each download's included license and GLTF export.
 - **Sketchfab (curated only):** the supplied source link is a search/tag page, not a license grant. Import only individual models whose downloadable license explicitly permits the intended game use; preserve creator/license metadata.
 
-The current Pine Forest loader uses three concurrent GLB loads, type-aware placement, and a clear central combat lane. The service worker caches successfully fetched same-origin assets for later offline sessions. The first complete asset download still requires a connection and sufficient browser storage. The browser build workflow now checks that the production Vite bundle compiles after each push.
+The Pine Forest loader uses three concurrent GLB loads, bounds-based metre targets, type-aware placement, a winding combat trail and stream corridor. The service worker caches successfully fetched same-origin assets for later offline sessions. The first complete asset download still requires a connection and sufficient browser storage. The browser build workflow now checks that the production Vite bundle compiles after each push.
 
 ## Quality gate
 
