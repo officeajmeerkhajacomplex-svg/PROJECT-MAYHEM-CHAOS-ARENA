@@ -17,7 +17,7 @@ Build for static hosting with `npm run build`; deploy the `dist/` folder.
 
 ## Current prototype
 
-- Three.js renderer and procedural Jungle Rush arena.
+- Three.js renderer and expanded procedural Jungle Rush environment: river, bridge, ruins, cave, research outpost, waterfall, dense vegetation, animated water, mist, drifting ambience, and sunlight beams.
 - Five weapon profiles with ammunition and reload handling.
 - Scout, Soldier, Heavy, Exploder, and Boss enemy prototypes.
 - Basic pursuit/attack AI, health, score, mission objective, and HUD.
@@ -30,7 +30,7 @@ See [docs/DEVELOPMENT_ROADMAP.md](docs/DEVELOPMENT_ROADMAP.md) for the five-regi
 
 ## Known prototype limitations
 
-This is an early playable foundation, not the complete game. It currently uses placeholder geometry and simple enemy behaviour. The campaign, mission/checkpoint system, local progression saves, armour, full enemy state machine, gadgets, final models and animations, audio, boss phases, controller support, adjustable settings, and comprehensive offline/device validation remain to be built. Touch controls and performance have not been verified on real Android devices.
+This is an early playable foundation, not the complete game. It still uses procedural placeholder geometry and simple enemy behaviour; the Jungle Rush environment is an atmosphere/layout pass, not final art assets. The campaign, mission/checkpoint system, local progression saves, armour, full enemy state machine, gadgets, final models and animations, audio, boss phases, controller support, adjustable settings, and comprehensive offline/device validation remain to be built. Touch controls and performance have not been verified on real Android devices.
 
 ## Technology and licensing
 
