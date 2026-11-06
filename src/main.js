@@ -72,124 +72,143 @@ mats.mud.map=surfaceMaps.dirt;mats.mud.color.set(0xffffff);mats.mud.needsUpdate=
 function box(x,y,z,sx,sy,sz,material,cast=true){
  const m=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),material);m.position.set(x,y,z);m.castShadow=cast;m.receiveShadow=true;scene.add(m);return m;
 }
-// PINE FOREST — scanned Poly Haven collection assets replace procedural environment props.
+// PINE FOREST ENVIRONMENT — scanned assets placed at human scale in a shaped landscape.
 const environment = new THREE.Group();
 scene.add(environment);
-const envClock = { time: 0 };
-const groundMaterial = new THREE.MeshStandardMaterial({color:0xffffff,roughness:1,map:surfaceMaps.ground});
-const ground = new THREE.Mesh(new THREE.PlaneGeometry(76,96),groundMaterial);
-ground.rotation.x=-Math.PI/2;
-ground.position.set(0,-.72,12);
-ground.receiveShadow=true;
-environment.add(ground);
+const windObjects = [];
+const floorMaterial = new THREE.MeshStandardMaterial({color:0xffffff,roughness:1,map:surfaceMaps.ground});
+const trailMaterial = new THREE.MeshStandardMaterial({color:0x59452e,roughness:1,map:surfaceMaps.dirt});
+const streamMaterial = new THREE.MeshStandardMaterial({color:0x8bc8c0,roughness:.2,transparent:true,opacity:.82});
 
-// Environment props come exclusively from the locally vendored Pine Forest collection.
-// Load the complete locally vendored Pine Forest model collection.
-async function loadPineForestCollection() {
-  const loader = new GLTFLoader();
-  loader.setMeshoptDecoder(MeshoptDecoder);
-  const toastEl = $('toast');
-  const menuStatus = $('asset-status');
-  const setStatus = (message) => {
-    if (toastEl) toastEl.textContent = message;
-    if (menuStatus) menuStatus.textContent = message;
-  };
-  try {
-    setStatus('PINE FOREST // READING LOCAL ASSET MANIFEST');
-    const response = await fetch('/assets/polyhaven/collection-manifest.json', { cache: 'no-cache' });
-    if (!response.ok) throw new Error(`Pine Forest manifest request failed: HTTP ${response.status}`);
-    const manifest = await response.json();
-    if (manifest.collection !== 'pine_forest' || !Array.isArray(manifest.models) || !manifest.models.length) {
-      throw new Error('Pine Forest collection manifest is empty or has the wrong collection ID');
-    }
-
-    // Load a small number of GLBs concurrently: much faster than serial loading,
-    // without creating a burst of 80+ MB of simultaneous decode work on phones.
-    const queue = manifest.models.map((entry, index) => ({ entry, index }));
-    const loaded = new Array(queue.length);
-    let completed = 0;
-    const worker = async () => {
-      while (queue.length) {
-        const task = queue.shift();
-        try {
-          const gltf = await loader.loadAsync(`/assets/polyhaven/${task.entry.id}/model.glb`);
-          const prototype = gltf.scene;
-          prototype.updateMatrixWorld(true);
-          const bounds = new THREE.Box3().setFromObject(prototype);
-          const size = bounds.getSize(new THREE.Vector3());
-          const height = Math.max(size.x, size.y, size.z);
-          if (!height || !Number.isFinite(height)) throw new Error('Invalid model dimensions');
-          const text = `${task.entry.id} ${task.entry.name || ''} ${task.entry.category || ''} ${(task.entry.tags || []).join(' ')}`.toLowerCase();
-          const kind = /sapling|fern|grass|moss|flower|shrub|bush/.test(text) ? 'understory'
-            : /rock|boulder|stone/.test(text) ? 'rock'
-            : /log|stump|wood|branch|root|trunk/.test(text) ? 'wood'
-            : /tree|conifer|spruce|fir|pine/.test(text) ? 'tree'
-            : /plant|vegetation/.test(text) ? 'understory' : 'prop';
-          loaded[task.index] = { entry: task.entry, prototype, bounds, height, kind };
-        } catch (error) {
-          console.error(`Pine Forest model failed to load: ${task.entry.id}`, error);
-          loaded[task.index] = null;
-        } finally {
-          completed++;
-          setStatus(`PINE FOREST // LOADING ${completed}/${manifest.models.length}`);
-        }
-      }
-    };
-    await Promise.all(Array.from({ length: Math.min(3, queue.length) }, worker));
-    const models = loaded.filter(Boolean);
-    if (!models.length) throw new Error('No Pine Forest models loaded successfully');
-
-    let seed = 721;
-    const random = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
-    const placements = [];
-    for (const model of models) {
-      const count = model.kind === 'tree' ? 7 : model.kind === 'understory' ? 7 : model.kind === 'rock' ? 4 : model.kind === 'wood' ? 2 : 2;
-      for (let i = 0; i < count; i++) {
-        let x = 0, z = 0;
-        if (model.kind === 'tree') {
-          const side = random() > .5 ? 1 : -1;
-          x = side * (10 + random() * 15);
-          z = -17 + random() * 62;
-        } else if (model.kind === 'understory') {
-          const side = random() > .5 ? 1 : -1;
-          x = side * (5.5 + random() * 17);
-          z = -17 + random() * 62;
-        } else {
-          x = (random() > .5 ? 1 : -1) * (6 + random() * 19);
-          z = -17 + random() * 62;
-        }
-        const targetHeight = model.kind === 'tree' ? 8 + random() * 5
-          : model.kind === 'understory' ? .55 + random() * 1.5
-          : model.kind === 'rock' ? .8 + random() * 2.4
-          : model.kind === 'wood' ? 1.2 + random() * 2.5 : 1.5 + random() * 3;
-        placements.push({ model, x, z, scale: targetHeight / model.height, rotation: random() * Math.PI * 2 });
-      }
-    }
-    for (const placement of placements) {
-      const instance = placement.model.prototype.clone(true);
-      instance.scale.setScalar(placement.scale);
-      instance.position.set(placement.x, -placement.model.bounds.min.y * placement.scale, placement.z);
-      instance.rotation.y = placement.rotation;
-      instance.traverse((node) => {
-        if (!node.isMesh) return;
-        node.castShadow = !isTouch; node.receiveShadow = true;
-        const materials = Array.isArray(node.material) ? node.material : [node.material];
-        for (const material of materials) {
-          if (material.map) material.map.colorSpace = THREE.SRGBColorSpace;
-          if (material.emissiveMap) material.emissiveMap.colorSpace = THREE.SRGBColorSpace;
-          material.needsUpdate = true;
-        }
-      });
-      environment.add(instance);
-    }
-    const message = `PINE FOREST // ${models.length}/${manifest.models.length} MODELS · ${placements.length} PLACEMENTS`;
-    console.info(message);
-    setStatus(message);
-  } catch (error) {
-    console.error('Pine Forest collection failed to load', error);
-    setStatus('ENVIRONMENT ASSETS FAILED // CHECK CONNECTION AND RELOAD');
-  }
+function forestTerrainHeight(x,z){
+ return .24*Math.sin(x*.17+z*.055)+.18*Math.sin(z*.13-x*.08)
+  +.32*Math.exp(-((x-27)**2+(z-28)**2)/360)
+  +.26*Math.exp(-((x+25)**2+(z+18)**2)/300);
 }
+const terrainGeometry=new THREE.PlaneGeometry(76,96,64,80);
+const terrainPositions=terrainGeometry.attributes.position;
+for(let i=0;i<terrainPositions.count;i++){
+ const x=terrainPositions.getX(i),z=terrainPositions.getY(i)+12;
+ terrainPositions.setZ(i,forestTerrainHeight(x,z));
+}
+terrainGeometry.computeVertexNormals();
+const ground=new THREE.Mesh(terrainGeometry,floorMaterial);
+ground.rotation.x=-Math.PI/2;ground.position.set(0,-.72,12);ground.receiveShadow=true;environment.add(ground);
+
+function makeForestRibbon(curve,width,material,yOffset=.02,segments=140){
+ const positions=[],uvs=[],indices=[];
+ for(let i=0;i<=segments;i++){
+  const t=i/segments,p=curve.getPointAt(t),tan=curve.getTangentAt(t).normalize();
+  const side=new THREE.Vector3(tan.z,0,-tan.x).normalize().multiplyScalar(width*.5);
+  const y=forestTerrainHeight(p.x,p.z)-.72+yOffset;
+  positions.push(p.x+side.x,y,p.z+side.z,p.x-side.x,y,p.z-side.z);
+  uvs.push(0,t*18,1,t*18);
+  if(i<segments){const a=i*2;indices.push(a,a+1,a+2,a+1,a+3,a+2);}
+ }
+ const g=new THREE.BufferGeometry();
+ g.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+ g.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
+ g.setIndex(indices);g.computeVertexNormals();
+ const mesh=new THREE.Mesh(g,material);mesh.receiveShadow=true;environment.add(mesh);return mesh;
+}
+const forestTrail=new THREE.CatmullRomCurve3([
+ new THREE.Vector3(0,0,-36),new THREE.Vector3(-1.2,0,-22),new THREE.Vector3(1.6,0,-8),
+ new THREE.Vector3(2.4,0,7),new THREE.Vector3(-1.4,0,21),new THREE.Vector3(.5,0,36),new THREE.Vector3(0,0,57)
+]);
+makeForestRibbon(forestTrail,5.2,trailMaterial,.035);
+const forestStream=new THREE.CatmullRomCurve3([
+ new THREE.Vector3(15,0,-34),new THREE.Vector3(18,0,-19),new THREE.Vector3(14.5,0,-4),
+ new THREE.Vector3(17,0,12),new THREE.Vector3(13,0,28),new THREE.Vector3(16,0,45),new THREE.Vector3(12.5,0,57)
+]);
+makeForestRibbon(forestStream,2.2,streamMaterial,.055,110);
+
+function forestAssetProfile(entry,size){
+ const id=entry.id.toLowerCase();
+ const label=`${entry.name||''} ${entry.category||''} ${(entry.tags||[]).join(' ')}`.toLowerCase();
+ if(/pine_tree|fir_tree/.test(id)&&!/sapling/.test(label))return{kind:'tree',metres:13.5,axis:'y',count:5};
+ if(/sapling/.test(label))return{kind:'sapling',metres:id.includes('small')?1.8:id.includes('medium')?3.1:2.5,axis:'y',count:5};
+ if(/fern/.test(label))return{kind:'fern',metres:.95,axis:'y',count:7};
+ if(/grass/.test(label))return{kind:'grass',metres:.48,axis:'y',count:8};
+ if(/moss/.test(label))return{kind:'moss',metres:.38,axis:'y',count:6};
+ if(/rock|stone/.test(label))return{kind:'rock',metres:1.45,axis:'max',count:4};
+ if(/stump/.test(label))return{kind:'stump',metres:.85,axis:'y',count:3};
+ if(/log|branch|root|trunk/.test(label))return{kind:'wood',metres:3.2,axis:'max',count:3};
+ return{kind:'prop',metres:1.2,axis:'y',count:2};
+}
+function trailXAt(z){return forestTrail.getPointAt(THREE.MathUtils.clamp((z+36)/93,0,1)).x;}
+function forestPlacement(kind,random){
+ for(let attempt=0;attempt<24;attempt++){
+  const side=random()>.5?1:-1,z=-34+random()*88;
+  const x=side*(kind==='tree'?10+random()*22:kind==='sapling'?6.5+random()*23:
+   ['fern','grass','moss'].includes(kind)?4.1+random()*15:6+random()*22);
+  if(Math.abs(x-trailXAt(z))<(kind==='tree'?7.5:3.7))continue;
+  if(kind!=='tree'&&Math.abs(z-28)<5&&Math.abs(x)<8)continue;
+  return{x,z};
+ }
+ return{x:18,z:0};
+}
+async function loadPineForestCollection(){
+ const loader=new GLTFLoader();loader.setMeshoptDecoder(MeshoptDecoder);
+ const toastEl=$('toast'),menuStatus=$('asset-status');
+ const setStatus=s=>{if(toastEl)toastEl.textContent=s;if(menuStatus)menuStatus.textContent=s;};
+ try{
+  setStatus('PINE FOREST // READING LOCAL ASSET MANIFEST');
+  const response=await fetch('/assets/polyhaven/collection-manifest.json',{cache:'no-cache'});
+  if(!response.ok)throw new Error(`Pine Forest manifest request failed: HTTP ${response.status}`);
+  const manifest=await response.json();
+  if(manifest.collection!=='pine_forest'||!Array.isArray(manifest.models)||!manifest.models.length)
+   throw new Error('Pine Forest collection manifest is empty or has the wrong collection ID');
+  const queue=manifest.models.map((entry,index)=>({entry,index})),loaded=new Array(queue.length);
+  let completed=0;
+  const worker=async()=>{
+   while(queue.length){
+    const task=queue.shift();
+    try{
+     const gltf=await loader.loadAsync(`/assets/polyhaven/${task.entry.id}/model.glb`);
+     const prototype=gltf.scene;prototype.updateMatrixWorld(true);
+     const bounds=new THREE.Box3().setFromObject(prototype),size=bounds.getSize(new THREE.Vector3());
+     const profile=forestAssetProfile(task.entry,size);
+     const measured=profile.axis==='max'?Math.max(size.x,size.y,size.z):size.y;
+     if(!measured||!Number.isFinite(measured))throw new Error('Invalid GLB dimensions');
+     loaded[task.index]={entry:task.entry,prototype,bounds,profile,scale:profile.metres/measured};
+    }catch(error){console.error(`Pine Forest model failed: ${task.entry.id}`,error);loaded[task.index]=null;}
+    finally{completed++;setStatus(`PINE FOREST // LOADING ${completed}/${manifest.models.length}`);}
+   }
+  };
+  await Promise.all(Array.from({length:Math.min(3,queue.length)},worker));
+  const models=loaded.filter(Boolean);
+  if(!models.length)throw new Error('No Pine Forest models loaded successfully');
+  let seed=721;const random=()=>{seed=(seed*16807)%2147483647;return(seed-1)/2147483646;};
+  const placements=[];
+  for(const model of models)for(let i=0;i<model.profile.count;i++){
+   const p=forestPlacement(model.profile.kind,random);
+   const jitter=model.profile.kind==='tree'?.86+random()*.24:.78+random()*.42;
+   placements.push({model,...p,scale:model.scale*jitter,rotation:random()*Math.PI*2});
+  }
+  for(const p of placements){
+   const instance=p.model.prototype.clone(true);
+   instance.scale.setScalar(p.scale);
+   instance.position.set(p.x,forestTerrainHeight(p.x,p.z)-.72-p.model.bounds.min.y*p.scale,p.z);
+   instance.rotation.y=p.rotation;
+   instance.traverse(node=>{
+    if(!node.isMesh)return;
+    node.castShadow=!isTouch;node.receiveShadow=true;
+    const materials=Array.isArray(node.material)?node.material:[node.material];
+    for(const material of materials){
+     if(material.map)material.map.colorSpace=THREE.SRGBColorSpace;
+     if(material.emissiveMap)material.emissiveMap.colorSpace=THREE.SRGBColorSpace;
+     material.needsUpdate=true;
+    }
+   });
+   environment.add(instance);
+   if(p.model.profile.kind==='tree'||p.model.profile.kind==='sapling')
+    windObjects.push({object:instance,phase:random()*Math.PI*2,strength:p.model.profile.kind==='tree'?.004:.009});
+  }
+  const message=`PINE FOREST // ${models.length}/${manifest.models.length} SCANNED MODELS · ${placements.length} NATURAL-SCALE INSTANCES`;
+  console.info(message);setStatus(message);
+ }catch(error){console.error('Pine Forest collection failed to load',error);setStatus('ENVIRONMENT ASSETS FAILED // CHECK CONNECTION AND RELOAD');}
+}
+loadPineForestCollection();
 loadPineForestCollection();
 
 const player={pos:new THREE.Vector3(0,1.7,-7),yaw:Math.PI,pitch:0,health:100,score:0,speed:6,grounded:true,stamina:100,sliding:false,slideTimer:0,slideCooldown:0,slideDir:new THREE.Vector3(),slideBoost:0,crouched:false,recoilKick:0};
