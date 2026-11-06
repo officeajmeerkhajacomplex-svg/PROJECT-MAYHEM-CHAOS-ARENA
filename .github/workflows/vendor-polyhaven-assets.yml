@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'scripts/vendor-polyhaven-assets.mjs'
+      - 'scripts/vendor-polyhaven-rifle.mjs'
       - 'src/main.js'
       - '.github/workflows/vendor-polyhaven-assets.yml'
   workflow_dispatch:
@@ -36,11 +37,13 @@ jobs:
           mkdir -p public/assets/hdri
           curl --fail --location --retry 3 --output public/assets/hdri/qwantani_mid_morning_puresky_2k.hdr https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/qwantani_mid_morning_puresky_2k.hdr
           test -s public/assets/hdri/qwantani_mid_morning_puresky_2k.hdr
+      - name: Download and optimize the single bolt-action rifle
+        run: node scripts/vendor-polyhaven-rifle.mjs
       - name: Commit vendored assets
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add public/assets/polyhaven public/assets/hdri
+          git add public/assets/polyhaven public/assets/hdri public/assets/weapons
           if git diff --cached --quiet; then
             echo "Assets already up to date"
           else
