@@ -1,0 +1,10 @@
+{
+  "id": "ea3dad7478624495a5a46f40127b0579",
+  "name": "fps animated smg",
+  "author": "DJMaesen",
+  "source": "https://sketchfab.com/3d-models/fps-animated-smg-ea3dad7478624495a5a46f40127b0579",
+  "license": "CC BY 4.0",
+  "modelAvailable": false,
+  "expectedModelPath": "public/assets/weapons/fps_animated_smg/model.glb",
+  "note": "Waiting for the authorized model archive from the user. Keep this manifest false until model.glb and any required files are supplied and inspected."
+}
