@@ -337,7 +337,6 @@ function movePlayer(dt){
  const stanceOffset=player.sliding?.52:player.crouched?.34:0;
  player.recoilKick=Math.max(0,player.recoilKick-2.8*dt);
  camera.position.set(player.pos.x,player.pos.y-stanceOffset,player.pos.z);camera.rotation.set(THREE.MathUtils.clamp(player.pitch-player.recoilKick,-1.35,1.35),player.yaw,0,'YXZ');
- updateHud();
 }
 const keys=new Set();
 addEventListener('keydown',e=>{if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();keys.add(e.code);if(e.code==='KeyR')reload();if(e.code==='KeyC'&&!e.repeat)startSlide();if(e.code==='Space'&&!e.repeat)jumpPlayer();if(e.code.startsWith('Digit'))selectWeapon(Number(e.code.slice(5))-1);if(e.code==='Escape'&&!paused)pauseGame();});
