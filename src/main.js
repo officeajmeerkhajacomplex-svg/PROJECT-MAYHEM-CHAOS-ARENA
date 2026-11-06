@@ -13,7 +13,7 @@ scene.fog = new THREE.FogExp2(0x718a7b, 0.0085);
 const camera = new THREE.PerspectiveCamera(74, innerWidth/innerHeight, .1, 180);
 camera.rotation.order = 'YXZ';
 const renderer = new THREE.WebGLRenderer({antialias:!isTouch, powerPreference:'high-performance'});
-renderer.setPixelRatio(Math.min(devicePixelRatio, isTouch ? 1.5 : 2));
+renderer.setPixelRatio(Math.min(devicePixelRatio, isTouch ? 1.15 : 1.5));
 renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = !isTouch;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -23,7 +23,7 @@ game.appendChild(renderer.domElement);
 scene.add(new THREE.HemisphereLight(0xd7f4df,0x34432d,1.9));
 scene.add(new THREE.AmbientLight(0x91bca0,0.28));
 const sun = new THREE.DirectionalLight(0xffe5b7,3.1);
-sun.position.set(-25,40,-10); sun.castShadow=!isTouch; sun.shadow.mapSize.set(1024,1024); scene.add(sun);
+sun.position.set(-25,40,-10); sun.castShadow=!isTouch; sun.shadow.mapSize.set(768,768); scene.add(sun);
 
 const mat=(color,roughness=1,metalness=0)=>new THREE.MeshStandardMaterial({color,roughness,metalness});
 const mats={
@@ -213,7 +213,6 @@ async function loadPineForestCollection(){
  }catch(error){console.error('Pine Forest collection failed to load',error);setStatus('ENVIRONMENT ASSETS FAILED // CHECK CONNECTION AND RELOAD');}
 }
 loadPineForestCollection();
-loadPineForestCollection();
 
 const player={pos:new THREE.Vector3(0,forestTerrainHeight(0,-7)+1.7,-7),yaw:Math.PI,pitch:0,health:100,score:0,speed:6,grounded:true,stamina:100,sliding:false,slideTimer:0,slideCooldown:0,slideDir:new THREE.Vector3(),slideBoost:0,crouched:false,recoilKick:0};
 camera.position.copy(player.pos);
@@ -294,7 +293,6 @@ function updateEnemies(dt,now){
   if(dist<e.range&&now>e.nextAttack){e.nextAttack=now+(e.type==='Boss'?850:1450);if(e.type==='Exploder'&&dist<2.3){player.health-=28;e.alive=false;scene.remove(e.group);toast('EXPLOSIVE UNIT DETONATED');}else if(dist<e.range*.72){player.health-=e.damage;toast('INCOMING FIRE');}}
  }
  if(player.health<=0){player.health=0;paused=true;pauseScreen.classList.remove('hidden');pauseScreen.querySelector('h2').innerHTML='MISSION <span>FAILED</span>';$('resume').textContent='REDEPLOY';}
- updateHud();
 }
 function startSlide(){
  if(paused||player.sliding||player.slideCooldown>0||player.pos.y>forestTerrainHeight(player.pos.x,player.pos.z)+1.72)return;
@@ -369,10 +367,12 @@ renderer.domElement.addEventListener('pointermove',e=>{if(isTouch&&e.pointerId==
 renderer.domElement.addEventListener('pointerup',e=>{if(e.pointerId===lookId){lookId=null;lastTouch=null;}});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&!paused)pauseGame();});
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,isTouch?1.5:2));});
+let lastHudUpdate=0;
 function animate(now){
  requestAnimationFrame(animate);const dt=Math.min((now-lastFrame)/1000,.04);lastFrame=now;
   for(const wind of windObjects)wind.object.rotation.z=Math.sin(now*.00045+wind.phase)*wind.strength;
  if(!paused){movePlayer(dt);updateEnemies(dt,now);if(fireHeld||fireTap)shoot();fireTap=false;}
+ if(now-lastHudUpdate>=100){updateHud();lastHudUpdate=now;}
  renderer.render(scene,camera);
 }
 updateHud();requestAnimationFrame(animate);
