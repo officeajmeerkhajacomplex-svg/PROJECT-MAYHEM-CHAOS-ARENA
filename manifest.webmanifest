@@ -8,5 +8,12 @@
   "orientation": "landscape",
   "background_color": "#071012",
   "theme_color": "#101a1b",
-  "icons": []
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
 }
