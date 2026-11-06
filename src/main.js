@@ -78,7 +78,7 @@ function tree(x,z,s=1){
 const environment = new THREE.Group();
 scene.add(environment);
 const envClock = { time: 0 };
-const animatedVeils=[], animatedMist=[], flowingFoam=[];
+const animatedVeils=[], animatedMist=[], flowingFoam=[], animatedCanopy=[];
 const envMaterials = {
   water: new THREE.MeshPhysicalMaterial({color:0xffffff,map:surfaceMaps.water,roughness:.16,metalness:.12,clearcoat:1,clearcoatRoughness:.08,transparent:true,opacity:.94,envMapIntensity:1.2}),
   waterFoam: new THREE.MeshBasicMaterial({color:0xb8fff0,transparent:true,opacity:.42}),
@@ -101,7 +101,6 @@ function addRock(x,y,z,sx,sy,sz,material=mats.stone){
   rock.scale.set(sx,sy,sz);rock.rotation.set(Math.random()*.4,Math.random()*Math.PI,Math.random()*.35);return rock;
 }
 const treeCrownGeometry=new THREE.IcosahedronGeometry(1,1);
-const treeLeafGeometry=new THREE.SphereGeometry(.42,7,5);
 function addTree(x,z,scale=1,variant=0){
   const g=new THREE.Group();g.position.set(x,0,z);g.scale.setScalar(scale);environment.add(g);
   const trunk=addMesh(new THREE.CylinderGeometry(.2,.42,4.7,8),mats.bark,0,2.25,0,g);
@@ -426,6 +425,7 @@ function animate(now){
  envClock.time+=dt;
  surfaceMaps.water.offset.x=(envClock.time*.018)%1;
  surfaceMaps.water.offset.y=(envClock.time*.045)%1;
+ for(const canopy of animatedCanopy){canopy.rotation.z=canopy.userData.baseZ+Math.sin(envClock.time*.8+canopy.userData.windPhase)*.025;canopy.rotation.x=Math.cos(envClock.time*.65+canopy.userData.windPhase)*.018;}
  for(const veil of animatedVeils)veil.position.y=4.7+Math.sin(envClock.time*3+veil.position.x)*.08;
  for(const puff of animatedMist){puff.position.y=.3+Math.abs(Math.sin(envClock.time*.7+puff.userData.phase))*1.6;puff.position.x=puff.userData.baseX+Math.sin(envClock.time*.35+puff.userData.phase)*.3;}
  for(const foam of flowingFoam){foam.position.x=foam.userData.flowBaseX+Math.sin(envClock.time*1.4+foam.userData.flowOffset)*.35;foam.position.z=foam.userData.flowBaseZ+Math.cos(envClock.time*1.1+foam.userData.flowOffset)*.45;}
