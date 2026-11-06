@@ -229,7 +229,7 @@ async function loadPolyHavenAsset(assetId, placements, targetHeight) {
 
     const includeEntries = Object.entries(modelFile.include || {})
       .filter(([, file]) => file?.url)
-      .map(([path, file]) => [path.replace(/\\\\/g, '/').replace(/^\\.\\//, ''), file.url]);
+      .map(([path, file]) => [path.replace(/\\/g, '/').replace(/^\.\//, ''), file.url]);
 
     // Resolve the exact dependency URLs supplied by Poly Haven. This prevents
     // missing albedo/alpha/normal maps from rendering foliage as white.
@@ -237,7 +237,7 @@ async function loadPolyHavenAsset(assetId, placements, targetHeight) {
     manager.setURLModifier((requestedUrl) => {
       let pathname = requestedUrl;
       try { pathname = decodeURIComponent(new URL(requestedUrl).pathname); } catch {}
-      pathname = pathname.replace(/\\\\/g, '/');
+      pathname = pathname.replace(/\\/g, '/');
       const exact = includeEntries.find(([path]) =>
         pathname.endsWith('/' + path) || pathname.endsWith(path)
       );
