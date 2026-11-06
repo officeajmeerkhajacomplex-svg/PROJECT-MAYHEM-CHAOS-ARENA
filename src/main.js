@@ -42,7 +42,7 @@ for(let i=0;i<44;i++){let x=(Math.random()-.5)*56,z=-17+Math.random()*65;if(Math
 for(let i=0;i<18;i++){let x=(Math.random()-.5)*22,z=4+Math.random()*38;box(x,1.1,z,1.2,2.2,1.2,mats.stone);}
 for(let i=0;i<30;i++){let x=(Math.random()-.5)*48,z=-12+Math.random()*60;const rock=new THREE.Mesh(new THREE.DodecahedronGeometry(.35+Math.random()*.6,0),mats.mud);rock.position.set(x,.1,z);rock.scale.y=.55;scene.add(rock);}
 
-const player={pos:new THREE.Vector3(0,1.7,-7),yaw:0,pitch:0,health:100,score:0,speed:6,grounded:true,stamina:100,sliding:false,slideTimer:0,slideCooldown:0,slideDir:new THREE.Vector3(),slideBoost:0,crouched:false};
+const player={pos:new THREE.Vector3(0,1.7,-7),yaw:0,pitch:0,health:100,score:0,speed:6,grounded:true,stamina:100,sliding:false,slideTimer:0,slideCooldown:0,slideDir:new THREE.Vector3(),slideBoost:0,crouched:false,recoilKick:0};
 camera.position.copy(player.pos);
 const weapons=[
  {name:'AR-01',desc:'ASSAULT RIFLE',mag:30,reserve:150,damage:26,rate:115,spread:.012,recoil:.012,auto:true},
@@ -94,7 +94,7 @@ function shoot(){
  if(w.mag<=0){reload();return;}lastShot=now;w.mag--;
  const moving=keys.has('KeyW')||keys.has('KeyA')||keys.has('KeyS')||keys.has('KeyD')||Math.abs(move.x)+Math.abs(move.y)>.2;
  const recoil=(w.recoil||.012)*(player.sliding?1.8:player.crouched?.72:moving?1.35:1);
- player.pitch=THREE.MathUtils.clamp(player.pitch+recoil,-1.35,1.35);
+ player.recoilKick=Math.min(.18,player.recoilKick+recoil);
  player.yaw+=((Math.random()-.5)*(w.recoil||.012))*.28;
  updateHud();
  let didHit=false;
@@ -164,7 +164,8 @@ function movePlayer(dt){
  velocityY-=20*dt;player.pos.y+=velocityY*dt;if(player.pos.y<1.7){player.pos.y=1.7;velocityY=0;}
  player.pos.x=THREE.MathUtils.clamp(player.pos.x,-28,28);player.pos.z=THREE.MathUtils.clamp(player.pos.z,-22,49);
  const stanceOffset=player.sliding?.52:player.crouched?.34:0;
- camera.position.set(player.pos.x,player.pos.y-stanceOffset,player.pos.z);camera.rotation.set(player.pitch,player.yaw,0,'YXZ');
+ player.recoilKick=Math.max(0,player.recoilKick-2.8*dt);
+ camera.position.set(player.pos.x,player.pos.y-stanceOffset,player.pos.z);camera.rotation.set(THREE.MathUtils.clamp(player.pitch-player.recoilKick,-1.35,1.35),player.yaw,0,'YXZ');
  updateHud();
 }
 const keys=new Set();
