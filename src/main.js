@@ -237,14 +237,46 @@ loadPineForestCollection();
 
 const player={pos:new THREE.Vector3(0,forestTerrainHeight(0,-7)+1.7,-7),yaw:Math.PI,pitch:0,health:100,score:0,speed:6,grounded:true,stamina:100,sliding:false,slideTimer:0,slideCooldown:0,slideDir:new THREE.Vector3(),slideBoost:0,crouched:false,recoilKick:0};
 camera.position.copy(player.pos);
-const weapons=[
- {name:'AR-01',desc:'ASSAULT RIFLE',mag:30,reserve:150,damage:26,rate:115,spread:.012,recoil:.012,auto:true},
- {name:'RAPID-9',desc:'SUBMACHINE GUN',mag:36,reserve:180,damage:14,rate:65,spread:.025,recoil:.008,auto:true},
- {name:'THUNDER-12',desc:'TACTICAL SHOTGUN',mag:8,reserve:48,damage:13,rate:720,spread:.075,recoil:.045,auto:false,pellets:7},
- {name:'LONGSHOT',desc:'PRECISION RIFLE',mag:5,reserve:30,damage:115,rate:950,spread:.002,recoil:.055},
- {name:'PULSE BLASTER',desc:'ENERGY WEAPON',mag:24,reserve:96,damage:34,rate:220,spread:.008,recoil:.016,auto:true}
-];
-let weaponIndex=0,lastShot=0,reloading=false,paused=true,fireHeld=false,fireTap=false;
+scene.add(camera);
+const weaponRig=new THREE.Group();weaponRig.position.set(.30,-.27,-.68);camera.add(weaponRig);
+const riflePivot=new THREE.Group();weaponRig.add(riflePivot);
+const weaponAnim={kick:0,pitch:0,muzzle:0,reloadElapsed:0,boltCycle:1};
+let rifleBolt=null,rifleBoltBase=null;
+const sleeveMaterial=new THREE.MeshStandardMaterial({color:0x344b3b,roughness:.92});
+const gloveMaterial=new THREE.MeshStandardMaterial({color:0x92775a,roughness:.88});
+function addViewArm(parent,start,end,radius,material){
+ const a=new THREE.Vector3(...start),b=new THREE.Vector3(...end),delta=b.clone().sub(a);
+ const mesh=new THREE.Mesh(new THREE.CapsuleGeometry(radius,Math.max(.01,delta.length()-radius*2),4,8),material);
+ mesh.position.copy(a).add(b).multiplyScalar(.5);mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),delta.normalize());
+ mesh.frustumCulled=false;parent.add(mesh);return mesh;
+}
+function addGlove(parent,position){
+ const palm=new THREE.Mesh(new THREE.SphereGeometry(.075,10,8),gloveMaterial);
+ palm.position.set(...position);palm.scale.set(1.12,.82,1.25);parent.add(palm);
+ for(let i=0;i<3;i++){const finger=new THREE.Mesh(new THREE.CapsuleGeometry(.018,.075,3,6),gloveMaterial);finger.position.set(position[0]-.035+i*.035,position[1]-.035,position[2]-.045);finger.rotation.x=.55;parent.add(finger);}
+}
+const triggerHand=new THREE.Group();weaponRig.add(triggerHand);
+addViewArm(triggerHand,[.32,-.30,.20],[.19,-.12,.02],.075,sleeveMaterial);addGlove(triggerHand,[.17,-.105,-.015]);
+const supportHand=new THREE.Group();weaponRig.add(supportHand);
+addViewArm(supportHand,[-.46,-.43,-.30],[-.13,-.17,-.35],.073,sleeveMaterial);addGlove(supportHand,[-.11,-.155,-.36]);
+const muzzleFlash=new THREE.Group();muzzleFlash.visible=false;riflePivot.add(muzzleFlash);
+const flashCore=new THREE.Mesh(new THREE.SphereGeometry(.045,8,8),new THREE.MeshBasicMaterial({color:0xffe4a0}));flashCore.scale.set(.8,.8,1.8);muzzleFlash.add(flashCore);
+const flashFlare=new THREE.Mesh(new THREE.ConeGeometry(.035,.16,8),new THREE.MeshBasicMaterial({color:0xff8a32}));flashFlare.rotation.x=-Math.PI/2;flashFlare.position.z=-.075;muzzleFlash.add(flashFlare);
+const muzzleLight=new THREE.PointLight(0xffa04a,0,3);muzzleFlash.add(muzzleLight);muzzleFlash.position.set(0,0,-.49);
+const rifleLoader=new GLTFLoader();rifleLoader.setMeshoptDecoder(MeshoptDecoder);
+rifleLoader.load('/assets/weapons/bolt_action_rifle_7_62/model.glb',gltf=>{
+ const rifle=gltf.scene;rifle.updateMatrixWorld(true);const bounds=new THREE.Box3().setFromObject(rifle);
+ const size=bounds.getSize(new THREE.Vector3()),center=bounds.getCenter(new THREE.Vector3()),longest=Math.max(size.x,size.y,size.z);
+ rifle.position.set(-center.x,-center.y,-center.z);if(size.x>=size.z)rifle.rotation.y=Math.PI/2;rifle.scale.setScalar(.88/longest);
+ rifle.traverse(node=>{
+  if(node.isMesh){node.castShadow=false;node.receiveShadow=false;node.frustumCulled=false;const materials=Array.isArray(node.material)?node.material:[node.material];for(const material of materials){if(material.map)material.map.colorSpace=THREE.SRGBColorSpace;material.needsUpdate=true;}}
+  if(!rifleBolt&&/bolt|charging.handle/i.test(node.name||''))rifleBolt=node;
+ });
+ if(rifleBolt)rifleBoltBase={position:rifleBolt.position.clone(),rotation:rifleBolt.rotation.clone()};
+ riflePivot.add(rifle);console.info('Poly Haven Bolt Action Rifle 7.62 viewmodel loaded (CC0)');
+},undefined,error=>console.error('Bolt-action rifle viewmodel failed to load',error));
+const weapon={name:'BOLT ACTION 7.62',desc:'BOLT-ACTION PRECISION RIFLE',capacity:5,mag:5,reserve:40,damage:118,fireInterval:820,baseSpread:.0018,movingSpread:.0045,verticalRecoil:.043,horizontalRecoil:.0022,weaponKick:.105,weaponRise:.082,recoilReturn:8.5};
+let lastShot=0,reloading=false,paused=true,fireHeld=false,fireTap=false;
 let enemies=[],lastFrame=performance.now(),velocityY=0,move={x:0,y:0};
 const raycaster=new THREE.Raycaster();
 function spawnEnemy(type,pos){
@@ -268,43 +300,49 @@ function updateHud(){
  const staminaBar=$('staminabar');if(staminaBar)staminaBar.style.width=Math.max(0,player.stamina)+'%';
  const status=$('status');if(status)status.textContent=player.sliding?'SLIDING':player.crouched?'CROUCHED':player.stamina<25?'LOW STAMINA':'READY';
  $('healthbar').style.width=Math.max(0,player.health)+'%';
- const w=weapons[weaponIndex];$('weapon').textContent=`${w.name} // ${w.desc}`;
- $('ammo').innerHTML=`${w.mag} <em>/ ${w.reserve}</em>`;
+ $('weapon').textContent=`${weapon.name} // ${weapon.desc}`;
+ $('ammo').innerHTML=`${weapon.mag} <em>/ ${weapon.reserve}</em>`;
  $('score').textContent='SCORE '+String(player.score).padStart(6,'0');
 }
 function toast(s){$('toast').textContent=s;setTimeout(()=>{$('toast').textContent='';},1500);}
 function hitmarker(){const h=$('hitmarker');h.style.opacity=1;setTimeout(()=>h.style.opacity=0,100);}
-function selectWeapon(i){if(i>=0&&i<weapons.length){weaponIndex=i;updateHud();}}
 function reload(){
- const w=weapons[weaponIndex];if(reloading||w.mag===w.capacity||w.reserve<=0)return;
- reloading=true;toast('RELOADING');
- setTimeout(()=>{const n=Math.min(w.capacity-w.mag,w.reserve);w.mag+=n;w.reserve-=n;reloading=false;updateHud();},950);
+ if(reloading||weapon.mag===weapon.capacity||weapon.reserve<=0)return;
+ reloading=true;weaponAnim.reloadElapsed=0;weaponAnim.boltCycle=1;toast('RELOADING // WORKING THE BOLT');
 }
-weapons.forEach((w,i)=>w.capacity=[30,36,8,5,24][i]);
-function shoot(){
- const w=weapons[weaponIndex],now=performance.now();
- if(reloading||now-lastShot<w.rate)return;
- if(w.mag<=0){reload();return;}lastShot=now;w.mag--;
+function updateWeaponAnimations(dt){
+ weaponAnim.kick=Math.max(0,weaponAnim.kick-Math.max(0,weaponAnim.kick)*weapon.recoilReturn*dt);
+ weaponAnim.pitch=Math.max(0,weaponAnim.pitch-Math.max(0,weaponAnim.pitch)*weapon.recoilReturn*dt);
  const moving=keys.has('KeyW')||keys.has('KeyA')||keys.has('KeyS')||keys.has('KeyD')||Math.abs(move.x)+Math.abs(move.y)>.2;
- const recoil=(w.recoil||.012)*(player.sliding?1.8:player.crouched?.72:moving?1.35:1);
- player.recoilKick=Math.min(.18,player.recoilKick+recoil);
- player.yaw+=((Math.random()-.5)*(w.recoil||.012))*.28;
- updateHud();
- let didHit=false;
- for(let p=0;p<(w.pellets||1);p++){
-  const moveSpread=(player.sliding?.012:player.crouched?-.004:moving?.009:0);
-  const spread=Math.max(.001,w.spread+moveSpread);
-  const dir=new THREE.Vector3((Math.random()-.5)*spread,(Math.random()-.5)*spread,-1).applyEuler(camera.rotation).normalize();
-  raycaster.set(camera.position,dir);raycaster.far=125;
-  const targets=[];for(const e of enemies)if(e.alive)targets.push(...e.group.children);
-  const hits=raycaster.intersectObjects(targets,false);
-  if(hits.length){
-   const hit=hits[0],enemy=enemies.find(e=>e.alive&&e.group.children.includes(hit.object));
-   if(enemy){enemy.hp-=w.damage;didHit=true;if(enemy.hp<=0){enemy.alive=false;scene.remove(enemy.group);player.score+=enemy.type==='Boss'?1500:enemy.type==='Heavy'?250:100;toast(enemy.type==='Boss'?'BOSS ELIMINATED':'HOSTILE ELIMINATED');}}
-  }
+ const bob=(!player.sliding&&moving)?Math.sin(performance.now()*.012)*.008:0;
+ let reloadWave=0;
+ if(reloading){
+  weaponAnim.reloadElapsed+=dt;const progress=Math.min(1,weaponAnim.reloadElapsed/2.35);reloadWave=Math.sin(progress*Math.PI);
+  if(progress>=1){const amount=Math.min(weapon.capacity-weapon.mag,weapon.reserve);weapon.mag+=amount;weapon.reserve-=amount;reloading=false;toast('RIFLE READY');updateHud();}
  }
- if(didHit)hitmarker();
- if(enemies.every(e=>!e.alive)){$('objective').textContent='OBJECTIVE COMPLETE';toast('AREA SECURED // MISSION COMPLETE');}
+ weaponRig.position.set(.30+(moving?Math.sin(performance.now()*.006)*.006:0),-.27+bob-reloadWave*.19,-.68+weaponAnim.kick+reloadWave*.10);
+ riflePivot.rotation.x=weaponAnim.pitch+reloadWave*.17;riflePivot.rotation.z=reloadWave*.26;
+ supportHand.position.set(reloadWave*.20,-reloadWave*.11,reloadWave*.08);triggerHand.position.y=-reloadWave*.045;
+ weaponAnim.muzzle=Math.max(0,weaponAnim.muzzle-dt);muzzleFlash.visible=weaponAnim.muzzle>0;muzzleLight.intensity=weaponAnim.muzzle>0?3.2:0;
+ if(rifleBolt&&rifleBoltBase){const cycle=weaponAnim.boltCycle;if(cycle<1){const phase=Math.min(1,cycle/.34);rifleBolt.rotation.x=rifleBoltBase.rotation.x+Math.sin(phase*Math.PI)*.58;rifleBolt.position.z=rifleBoltBase.position.z-Math.sin(phase*Math.PI)*.035;weaponAnim.boltCycle=Math.min(1,cycle+dt);}else{rifleBolt.rotation.copy(rifleBoltBase.rotation);rifleBolt.position.copy(rifleBoltBase.position);}}
+}
+function shoot(){
+ const now=performance.now();if(reloading||now-lastShot<weapon.fireInterval)return;
+ if(weapon.mag<=0){reload();return;}lastShot=now;weapon.mag--;
+ const moving=keys.has('KeyW')||keys.has('KeyA')||keys.has('KeyS')||keys.has('KeyD')||Math.abs(move.x)+Math.abs(move.y)>.2;
+ const movementPenalty=player.sliding?.010:player.crouched?-.0005:moving?weapon.movingSpread:0;
+ const recoilScale=player.sliding?1.45:player.crouched?.78:moving?1.18:1;
+ player.recoilKick=Math.min(.20,player.recoilKick+weapon.verticalRecoil*recoilScale);
+ player.yaw+=(Math.random()-.5)*weapon.horizontalRecoil*recoilScale;
+ weaponAnim.kick=Math.min(.16,weaponAnim.kick+weapon.weaponKick);weaponAnim.pitch=Math.min(.14,weaponAnim.pitch+weapon.weaponRise);
+ weaponAnim.muzzle=.065;weaponAnim.boltCycle=0;updateHud();
+ let didHit=false;const spread=Math.max(.0008,weapon.baseSpread+movementPenalty);
+ const dir=new THREE.Vector3((Math.random()-.5)*spread,(Math.random()-.5)*spread,-1).applyEuler(camera.rotation).normalize();
+ raycaster.set(camera.position,dir);raycaster.far=125;
+ const targets=[];for(const e of enemies)if(e.alive)targets.push(...e.group.children);
+ const hits=raycaster.intersectObjects(targets,false);
+ if(hits.length){const hit=hits[0],enemy=enemies.find(e=>e.alive&&e.group.children.includes(hit.object));if(enemy){enemy.hp-=weapon.damage;didHit=true;if(enemy.hp<=0){enemy.alive=false;scene.remove(enemy.group);player.score+=enemy.type==='Boss'?1500:enemy.type==='Heavy'?250:100;toast(enemy.type==='Boss'?'BOSS ELIMINATED':'HOSTILE ELIMINATED');}}}
+ if(didHit)hitmarker();if(enemies.every(e=>!e.alive)){$('objective').textContent='OBJECTIVE COMPLETE';toast('AREA SECURED // MISSION COMPLETE');}
 }
 function updateEnemies(dt,now){
  for(const e of enemies){if(!e.alive)continue;
@@ -360,7 +398,7 @@ function movePlayer(dt){
  camera.position.set(player.pos.x,player.pos.y-stanceOffset,player.pos.z);camera.rotation.set(THREE.MathUtils.clamp(player.pitch-player.recoilKick,-1.35,1.35),player.yaw,0,'YXZ');
 }
 const keys=new Set();
-addEventListener('keydown',e=>{if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();keys.add(e.code);if(e.code==='KeyR')reload();if(e.code==='KeyC'&&!e.repeat)startSlide();if(e.code==='Space'&&!e.repeat)jumpPlayer();if(e.code.startsWith('Digit'))selectWeapon(Number(e.code.slice(5))-1);if(e.code==='Escape'&&!paused)pauseGame();});
+addEventListener('keydown',e=>{if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();keys.add(e.code);if(e.code==='KeyR')reload();if(e.code==='KeyC'&&!e.repeat)startSlide();if(e.code==='Space'&&!e.repeat)jumpPlayer();if(e.code==='Escape'&&!paused)pauseGame();});
 addEventListener('keyup',e=>keys.delete(e.code));
 renderer.domElement.addEventListener('click',()=>{if(!isTouch&&!paused)renderer.domElement.requestPointerLock?.();});
 document.addEventListener('mousemove',e=>{if(document.pointerLockElement===renderer.domElement&&!paused){player.yaw-=e.movementX*.002;player.pitch=THREE.MathUtils.clamp(player.pitch-e.movementY*.002,-1.35,1.35);}});
@@ -386,12 +424,12 @@ renderer.domElement.addEventListener('pointerdown',e=>{if(isTouch&&e.clientX>inn
 renderer.domElement.addEventListener('pointermove',e=>{if(isTouch&&e.pointerId===lookId&&lastTouch&&!paused){player.yaw-=(e.clientX-lastTouch.x)*.004;player.pitch=THREE.MathUtils.clamp(player.pitch-(e.clientY-lastTouch.y)*.004,-1.35,1.35);lastTouch={x:e.clientX,y:e.clientY};}});
 renderer.domElement.addEventListener('pointerup',e=>{if(e.pointerId===lookId){lookId=null;lastTouch=null;}});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&!paused)pauseGame();});
-addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,isTouch?1.5:2));});
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,isTouch?1.15:1.5));});
 let lastHudUpdate=0;
 function animate(now){
  requestAnimationFrame(animate);const dt=Math.min((now-lastFrame)/1000,.04);lastFrame=now;
   for(const wind of windObjects)wind.object.rotation.z=Math.sin(now*.00045+wind.phase)*wind.strength;
- if(!paused){movePlayer(dt);updateEnemies(dt,now);if(fireHeld||fireTap)shoot();fireTap=false;}
+ if(!paused){movePlayer(dt);updateEnemies(dt,now);if(fireHeld||fireTap)shoot();fireTap=false;updateWeaponAnimations(dt);}
  if(now-lastHudUpdate>=100){updateHud();lastHudUpdate=now;}
 
  renderer.render(scene,camera);
