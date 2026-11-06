@@ -97,25 +97,6 @@ function addRock(x,y,z,sx,sy,sz,material=mats.stone){
   const rock=addMesh(new THREE.IcosahedronGeometry(1,1),material,x,y,z);
   rock.scale.set(sx,sy,sz);rock.rotation.set(Math.random()*.4,Math.random()*Math.PI,Math.random()*.35);return rock;
 }
-const fernGeometry=(()=>{
- const positions=[],indices=[];
- for(let f=0;f<8;f++){
-  const a=f*Math.PI*2/8,dx=Math.cos(a),dz=Math.sin(a);
-  const base=[0,.08,0],tip=[dx*.82,1.08,dz*.82];
-  const mid=[dx*.48,.68,dz*.48],sideX=-dz*.18,sideZ=dx*.18;
-  const left=[mid[0]+sideX,.57,mid[2]+sideZ],right=[mid[0]-sideX,.57,mid[2]-sideZ];
-  const offset=positions.length/3;
-  positions.push(...base,...left,...mid,...right,...tip);
-  indices.push(offset,offset+1,offset+2,offset+2,offset+3,offset+4);
- }
- const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));geo.setIndex(indices);geo.computeVertexNormals();return geo;
-})();
-function addFern(x,z,scale=1,flower=false){
- const fern=addMesh(fernGeometry,envMaterials.fern,x,.02,z,environment,false);
- fern.scale.setScalar(scale);fern.rotation.y=Math.random()*Math.PI*2;
- if(flower){const bloom=addMesh(new THREE.SphereGeometry(.12,7,6),Math.random()>.5?envMaterials.flowerA:envMaterials.flowerB,x,.98*scale,z,environment,false);bloom.scale.set(1,.7,1);}
- return fern;
-}
 function addRuinColumn(x,z,h=4){
   const g=new THREE.Group();g.position.set(x,0,z);environment.add(g);
   addMesh(new THREE.CylinderGeometry(.48,.62,h,8),envMaterials.ruin,0,h/2,0,g);
@@ -204,83 +185,45 @@ for(let i=0;i<3;i++){
 }
 addRock(0,-.4,-.3,7,2.2,3.2,mats.stone).position.x=25;
 for(let i=0;i<12;i++){const splash=addMesh(new THREE.SphereGeometry(.22+Math.random()*.35,7,5),envMaterials.waterFoam,24+(Math.random()-.5)*5,.1+Math.random()*2,9+(Math.random()-.5)*3,environment,false);splash.userData.mist=true;splash.userData.phase=Math.random()*6.28;splash.userData.baseX=splash.position.x;animatedMist.push(splash);}
-// Understory ferns and flowering ground cover. Island Tree 02 supplies the tree canopy; primitive tree and palm meshes are removed.
-for(let i=0;i<(isTouch?65:125);i++){
-  const x=(Math.random()-.5)*58,z=-29+Math.random()*70;
-  if(Math.abs(x)<5&&z<34&&z>-15)continue;
-  addFern(x,z,.55+Math.random()*.85,Math.random()>.86);
-}
-// Poly Haven foliage and rock models (CC0). Model files and their declared
-// texture dependencies are fetched online; authored ferns remain procedural.
+// Poly Haven models are vendored into public/assets by the repository workflow.
+// GLTFLoader resolves each model's texture files locally relative to model.gltf.
 async function loadPolyHavenAsset(assetId, placements, targetHeight) {
   try {
-    const response = await fetch(`https://api.polyhaven.com/files/${assetId}`);
-    if (!response.ok) throw new Error(`Poly Haven metadata: ${response.status}`);
-    const files = await response.json();
-
-    // Model downloads live under modelFiles.gltf (not files.gltf). Each
-    // fileWithIncludes record also lists texture/buffer dependencies.
-    const gltfVariants = files?.modelFiles?.gltf || files?.gltf || {};
-    const preferred = isTouch ? ['1k','2k','4k'] : ['2k','1k','4k'];
-    const resolution = preferred.find((key) => gltfVariants?.[key]?.gltf?.url);
-    const modelFile = resolution ? gltfVariants[resolution].gltf : null;
-    if (!modelFile?.url) throw new Error(`No glTF download for ${assetId}`);
-
-    const includeEntries = Object.entries(modelFile.include || {})
-      .filter(([, file]) => file?.url)
-      .map(([path, file]) => [path.replace(/\\/g, '/').replace(/^\.\//, ''), file.url]);
-
-    // Resolve the exact dependency URLs supplied by Poly Haven. This prevents
-    // missing albedo/alpha/normal maps from rendering foliage as white.
-    const manager = new THREE.LoadingManager();
-    manager.setURLModifier((requestedUrl) => {
-      let pathname = requestedUrl;
-      try { pathname = decodeURIComponent(new URL(requestedUrl).pathname); } catch {}
-      pathname = pathname.replace(/\\/g, '/');
-      const exact = includeEntries.find(([path]) =>
-        pathname.endsWith('/' + path) || pathname.endsWith(path)
-      );
-      if (exact) return exact[1];
-
-      const basename = pathname.split('/').pop();
-      const sameName = includeEntries.filter(([path]) => path.split('/').pop() === basename);
-      return sameName.length === 1 ? sameName[0][1] : requestedUrl;
-    });
-    const loader = new GLTFLoader(manager);
-    const gltf = await loader.loadAsync(modelFile.url);
+    const modelUrl = `/assets/polyhaven/${assetId}/model.gltf`;
+    const loader = new GLTFLoader();
+    const gltf = await loader.loadAsync(modelUrl);
     const prototype = gltf.scene;
     prototype.updateMatrixWorld(true);
     const bounds = new THREE.Box3().setFromObject(prototype);
     const size = bounds.getSize(new THREE.Vector3());
     if (!size.y) throw new Error(`Loaded ${assetId} has no measurable height`);
-    const scale = targetHeight / size.y;
+    const baseScale = targetHeight / size.y;
 
     for (const placement of placements) {
       const instance = prototype.clone(true);
-      instance.scale.setScalar(scale * (placement.scale || 1));
-      instance.position.set(placement.x, -bounds.min.y * scale * (placement.scale || 1), placement.z);
+      const scale = baseScale * (placement.scale || 1);
+      instance.scale.setScalar(scale);
+      instance.position.set(placement.x, -bounds.min.y * scale, placement.z);
       instance.rotation.y = placement.rotation || 0;
       instance.traverse((node) => {
         if (!node.isMesh) return;
         node.castShadow = !isTouch;
         node.receiveShadow = true;
-        if (node.material) {
-          const materials = Array.isArray(node.material) ? node.material : [node.material];
-          for (const material of materials) {
-            // Keep glTF PBR maps and alpha-tested leaf cards intact.
-            material.needsUpdate = true;
-          }
+        const materials = Array.isArray(node.material) ? node.material : [node.material];
+        for (const material of materials) {
+          if (material.map) material.map.colorSpace = THREE.SRGBColorSpace;
+          if (material.emissiveMap) material.emissiveMap.colorSpace = THREE.SRGBColorSpace;
+          material.needsUpdate = true;
         }
       });
       environment.add(instance);
     }
-    console.info(`Poly Haven asset loaded: ${assetId} (${resolution}, ${placements.length} instance(s), ${includeEntries.length} dependencies)`);
+    console.info(`Local Poly Haven model loaded: ${assetId} (${placements.length} instance(s))`);
   } catch (error) {
-    if (assetId === 'island_tree_02') console.error('Island Tree 02 could not be loaded. Check the Poly Haven API/CDN connection.', error);
-    else console.warn(`Poly Haven foliage asset could not be loaded: ${assetId}`, error);
+    console.error(`Local model missing or failed to load: ${assetId}. Run the Vendor Poly Haven game assets workflow.`, error);
   }
 }
-if (navigator.onLine) {
+{
   loadPolyHavenAsset('shrub_02', [
     {x:-9,z:-13,scale:1.15,rotation:.4},{x:9,z:-11,scale:1.05,rotation:2.1},
     {x:-10,z:4,scale:1.25,rotation:1.2},{x:10,z:8,scale:1.1,rotation:2.8},
@@ -300,13 +243,11 @@ if (navigator.onLine) {
     {x:-6.2,z:-4,scale:1.8,rotation:.5},{x:6.5,z:1,scale:1.6,rotation:2.2},
     {x:-8.2,z:24,scale:1.7,rotation:1.2},{x:8.4,z:27,scale:1.9,rotation:3.4}
   ], .75);
-  // One prominent Island Tree 02 is used on all devices: this scanned model
-  // is very dense, so avoid multiplying its geometry across the arena.
+  // One prominent scanned tree keeps the dense source mesh affordable on mobile.
   loadPolyHavenAsset('island_tree_02', [
     {x:-15,z:16,scale:1.0,rotation:.65}
   ], 7.2);
 }
-
 // Hanging vines around ruins and canopy edges.
 for(let i=0;i<22;i++){
   const x=-24+Math.random()*48,z=-16+Math.random()*43,h=1.5+Math.random()*3;
