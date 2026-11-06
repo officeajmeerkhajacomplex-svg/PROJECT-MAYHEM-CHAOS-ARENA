@@ -115,8 +115,7 @@ function addTree(x,z,scale=1,variant=0){
     const a=c*Math.PI*2/7, r=.85+Math.random()*.45;
     const crown=addMesh(treeCrownGeometry,variant%2?envMaterials.leafDark:envMaterials.leafBright,
       Math.cos(a)*r,4.5+Math.random()*.8,Math.sin(a)*r,g);
-    crown.scale.set(1.15,.72,1);crown.rotation.y=Math.random()*Math.PI;
-    for(let leaf=0;leaf<3;leaf++){const blade=addMesh(new THREE.SphereGeometry(.42,7,5),leaf%2?envMaterials.leafLight:envMaterials.leafBright,Math.cos(a+leaf*.55)*(r+.42),4.8+Math.random()*.45,Math.sin(a+leaf*.55)*(r+.42),g,false);blade.scale.set(.22,.07,.82);blade.rotation.y=a+leaf*.55;blade.rotation.z=-.22;}
+    crown.scale.set(1.15,.72,1);crown.rotation.y=Math.random()*Math.PI;crown.userData.windPhase=Math.random()*6.28;crown.userData.baseZ=crown.rotation.z;animatedCanopy.push(crown);
   }
   const mossPatch=addMesh(new THREE.SphereGeometry(.72,8,6),envMaterials.moss,0,.25,.18,g,false);
   mossPatch.scale.set(1,.22,.8);
