@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <meta name="theme-color" content="#101a1b" />
+  <meta name="description" content="PROJECT MAYHEM: CHAOS ARENA — browser-based sci-fi FPS." />
+  <title>PROJECT MAYHEM // CHAOS ARENA</title>
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div id="game"></div>
+  <div id="menu" class="screen">
+    <div class="menu-panel">
+      <div class="eyebrow">MAYHEM INDUSTRIES // COMBAT SIMULATION</div>
+      <h1>PROJECT <span>MAYHEM</span></h1>
+      <div class="subtitle">CHAOS ARENA</div>
+      <p class="brief">The patrol network has gone rogue. Drop into the jungle perimeter, eliminate hostile units, and survive the arena.</p>
+      <div class="mission"><span>OPERATION 01</span><b>JUNGLE RUSH</b><small>ELIMINATE HOSTILE ROBOTS · SURVIVE</small></div>
+      <button id="start">DEPLOY INTO ARENA</button>
+      <div class="controls-note">PC: WASD · MOUSE · CLICK TO FIRE · R RELOAD · SHIFT SPRINT<br/>ANDROID: LEFT STICK · DRAG TO LOOK · FIRE / JUMP BUTTONS</div>
+    </div>
+  </div>
+  <div id="hud" class="hidden">
+    <div class="hud-top"><div class="brand">MAYHEM <i>///</i> CHAOS ARENA</div><div id="objective">OBJECTIVE: CLEAR THE PATROL</div><div id="score">SCORE 000000</div></div>
+    <div class="crosshair"><i></i><b></b></div>
+    <div class="hud-bottom">
+      <div class="health"><span>VITALS</span><strong id="health">100</strong><div class="bar"><i id="healthbar"></i></div></div>
+      <div class="weapon"><small id="weapon">AR-01 // ASSAULT RIFLE</small><strong id="ammo">30 <em>/ 150</em></strong><span id="status">READY</span></div>
+    </div>
+    <div id="hitmarker">✕</div>
+    <div id="toast"></div>
+  </div>
+  <div id="mobile" class="hidden">
+    <div id="stick-zone"><div id="stick"><div></div></div></div>
+    <div class="mobile-actions">
+      <button id="jump">JUMP</button><button id="reload">RELOAD</button><button id="fire">FIRE</button>
+    </div>
+  </div>
+  <div id="pause" class="screen hidden"><div class="menu-panel compact"><div class="eyebrow">COMBAT PAUSED</div><h2>ARENA <span>ON HOLD</span></h2><button id="resume">RESUME</button></div></div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
