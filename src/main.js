@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const $ = (id) => document.getElementById(id);
 const game = $('game');
@@ -246,6 +247,61 @@ for(let i=0;i<(isTouch?15:26);i++){
   addMesh(new THREE.CylinderGeometry(.12,.22,5.5,7),mats.bark,0,2.7,0,palm).rotation.z=.12;
   for(let f=0;f<7;f++){const frond=addMesh(new THREE.ConeGeometry(.28,3.6,5),f%2?envMaterials.leafDark:envMaterials.leafBright,Math.cos(f*6.28/7)*1.25,5.15,Math.sin(f*6.28/7)*1.25,palm,false);frond.rotation.z=-Math.cos(f*6.28/7)*.9;frond.rotation.x=Math.sin(f*6.28/7)*.9;}
 }
+// Optional real-world foliage and rock dressing from Poly Haven (CC0).
+// Procedural scenery remains in place as an offline-safe fallback; remote models
+// enhance the scene when the player has a connection.
+const gltfLoader = new GLTFLoader();
+async function loadPolyHavenAsset(assetId, placements, targetHeight) {
+  try {
+    const response = await fetch(`https://api.polyhaven.com/files/${assetId}`);
+    if (!response.ok) throw new Error(`Poly Haven metadata: ${response.status}`);
+    const files = await response.json();
+    const modelUrl = files?.gltf?.['1k']?.gltf?.url || files?.gltf?.['2k']?.gltf?.url;
+    if (!modelUrl) throw new Error(`No glTF download for ${assetId}`);
+    const gltf = await gltfLoader.loadAsync(modelUrl);
+    const prototype = gltf.scene;
+    prototype.updateMatrixWorld(true);
+    const bounds = new THREE.Box3().setFromObject(prototype);
+    const size = bounds.getSize(new THREE.Vector3());
+    if (!size.y) return;
+    const scale = targetHeight / size.y;
+    for (const placement of placements) {
+      const instance = prototype.clone(true);
+      instance.scale.setScalar(scale * (placement.scale || 1));
+      instance.position.set(placement.x, -bounds.min.y * scale, placement.z);
+      instance.rotation.y = placement.rotation || 0;
+      instance.traverse((node) => {
+        if (node.isMesh) { node.castShadow = !isTouch; node.receiveShadow = true; }
+      });
+      environment.add(instance);
+    }
+  } catch (error) {
+    // The handcrafted fallback vegetation remains visible if the CDN is offline.
+    console.info(`Optional world asset skipped: ${assetId}`, error);
+  }
+}
+if (navigator.onLine) {
+  loadPolyHavenAsset('shrub_02', [
+    {x:-9,z:-13,scale:1.15,rotation:.4},{x:9,z:-11,scale:1.05,rotation:2.1},
+    {x:-10,z:4,scale:1.25,rotation:1.2},{x:10,z:8,scale:1.1,rotation:2.8},
+    {x:-8,z:29,scale:1.2,rotation:.8},{x:9,z:31,scale:1.3,rotation:2.4}
+  ], 2.2);
+  loadPolyHavenAsset('fern_02', [
+    {x:-6.5,z:-12,scale:.75,rotation:.3},{x:6.8,z:-9,scale:.7,rotation:1.7},
+    {x:-7,z:13,scale:.8,rotation:2.1},{x:7.5,z:17,scale:.72,rotation:4.2},
+    {x:-23,z:22,scale:.85,rotation:1.1},{x:22,z:26,scale:.8,rotation:3.4}
+  ], 1.0);
+  loadPolyHavenAsset('grass_medium_02', [
+    {x:-5.7,z:-17,scale:1.2,rotation:.2},{x:5.8,z:-15,scale:1.25,rotation:2.2},
+    {x:-6.2,z:20,scale:1.15,rotation:4.1},{x:6.3,z:25,scale:1.2,rotation:1.4},
+    {x:-18,z:34,scale:1.3,rotation:3.2},{x:18,z:36,scale:1.2,rotation:.7}
+  ], .55);
+  loadPolyHavenAsset('rock_07', [
+    {x:-6.2,z:-4,scale:1.8,rotation:.5},{x:6.5,z:1,scale:1.6,rotation:2.2},
+    {x:-8.2,z:24,scale:1.7,rotation:1.2},{x:8.4,z:27,scale:1.9,rotation:3.4}
+  ], .75);
+}
+
 // Hanging vines around ruins and canopy edges.
 for(let i=0;i<22;i++){
   const x=-24+Math.random()*48,z=-16+Math.random()*43,h=1.5+Math.random()*3;
