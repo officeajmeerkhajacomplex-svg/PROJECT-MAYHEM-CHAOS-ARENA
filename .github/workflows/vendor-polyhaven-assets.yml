@@ -27,7 +27,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Download models and texture dependencies
+      - name: Install glTF optimization tools
+        run: npm install --global @gltf-transform/cli@4.5.1
+      - name: Download, optimize, and vendor Pine Forest models
         run: node scripts/vendor-polyhaven-assets.mjs
       - name: Commit vendored assets
         run: |
