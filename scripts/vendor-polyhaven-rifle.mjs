@@ -21,7 +21,7 @@ async function download(url, destination) {
   return bytes.byteLength;
 }
 function safeRelative(input) {
-  const clean = String(input).replaceAll('\\\\', '/').replace(/^\\/+/, '');
+  const clean = String(input).split(String.fromCharCode(92)).join('/').replace(/^\\/+/, '');
   const parts = clean.split('/');
   if (parts.some((part) => !part || part === '.' || part === '..')) throw new Error(`Unsafe dependency path: ${input}`);
   return parts.join('/');
