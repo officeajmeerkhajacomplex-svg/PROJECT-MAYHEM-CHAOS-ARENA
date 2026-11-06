@@ -1,0 +1,37 @@
+name: Vendor Poly Haven game assets
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/vendor-polyhaven-assets.mjs'
+      - '.github/workflows/vendor-polyhaven-assets.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  vendor-assets:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Download models and texture dependencies
+        run: node scripts/vendor-polyhaven-assets.mjs
+      - name: Commit vendored assets
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/assets/polyhaven
+          if git diff --cached --quiet; then
+            echo "Assets already up to date"
+          else
+            git commit -m "Vendor Poly Haven models and textures"
+            git push
+          fi
