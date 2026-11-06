@@ -210,9 +210,8 @@ for(let i=0;i<(isTouch?65:125);i++){
   if(Math.abs(x)<5&&z<34&&z>-15)continue;
   addFern(x,z,.55+Math.random()*.85,Math.random()>.86);
 }
-// Optional real-world foliage and rock dressing from Poly Haven (CC0).
-// Procedural scenery remains in place as an offline-safe fallback; remote models
-// enhance the scene when the player has a connection.
+// Poly Haven foliage and rock models (CC0). Model files and their declared
+// texture dependencies are fetched online; authored ferns remain procedural.
 async function loadPolyHavenAsset(assetId, placements, targetHeight) {
   try {
     const response = await fetch(`https://api.polyhaven.com/files/${assetId}`);
