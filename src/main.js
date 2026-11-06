@@ -301,15 +301,11 @@ if (navigator.onLine) {
     {x:-6.2,z:-4,scale:1.8,rotation:.5},{x:6.5,z:1,scale:1.6,rotation:2.2},
     {x:-8.2,z:24,scale:1.7,rotation:1.2},{x:8.4,z:27,scale:1.9,rotation:3.4}
   ], .75);
-  // Island Tree 02 replaces the former low-poly procedural trees and palms.
-  // Limit copies on touch devices to keep the detailed model affordable.
-  const islandTreePlacements = [
-    // Put the first specimen ahead of the spawn so the replacement is obvious.
-    {x:-18,z:8,scale:1.0,rotation:.65},
-    {x:22,z:14,scale:.92,rotation:2.45},
-    {x:-27,z:39,scale:.88,rotation:1.8}
-  ];
-  loadPolyHavenAsset('island_tree_02', isTouch ? islandTreePlacements.slice(0,1) : islandTreePlacements, 7.2);
+  // One prominent Island Tree 02 is used on all devices: this scanned model
+  // is very dense, so avoid multiplying its geometry across the arena.
+  loadPolyHavenAsset('island_tree_02', [
+    {x:-15,z:16,scale:1.0,rotation:.65}
+  ], 7.2);
 }
 
 // Hanging vines around ruins and canopy edges.
