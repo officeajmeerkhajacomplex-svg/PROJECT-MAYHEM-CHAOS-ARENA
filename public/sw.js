@@ -1,4 +1,4 @@
-const CACHE = 'mayhem-shell-v1';
+const CACHE = 'mayhem-shell-v2';
 const SHELL = ['/', '/index.html', '/manifest.webmanifest'];
 
 self.addEventListener('install', (event) => {
@@ -23,6 +23,6 @@ self.addEventListener('fetch', (event) => {
         caches.open(CACHE).then((cache) => cache.put(request, copy));
       }
       return response;
-    }).catch(() => caches.match('/index.html')))
+    }).catch((error) => { if (request.mode === 'navigate') return caches.match('/index.html'); throw error; }))
   );
 });
