@@ -1,6 +1,6 @@
 # PROJECT MAYHEM: CHAOS ARENA
 
-Browser-first, single-player 3D FPS prototype for desktop and Android browsers.
+Browser-first, single-player 3D FPS prototype for desktop and Android browsers, built with Three.js and Vite.
 
 ## Run locally
 
@@ -18,15 +18,20 @@ Build for static hosting with `npm run build`; deploy the `dist/` folder.
 ## Current prototype
 
 - Three.js renderer and procedural Jungle Rush arena.
-- Five weapon profiles with ammo and reload handling.
+- Five weapon profiles with ammunition and reload handling.
 - Scout, Soldier, Heavy, Exploder, and Boss enemy prototypes.
 - Basic pursuit/attack AI, health, score, mission objective, and HUD.
 - Touch controls for mobile browsers.
+- Web app manifest and service worker cache for an installable, offline-capable shell after the first successful load.
 
-## Limitations
+## Source-aligned plan
 
-This is an early playable foundation, not the complete game brief. It currently has placeholder geometry, simple enemy behavior, and no campaign/save system, audio, polished animations, final boss mechanics, or device-performance validation. The five-region campaign, mission structure, gadgets, progression, local saves, and expanded AI remain planned work.
+See [docs/DEVELOPMENT_ROADMAP.md](docs/DEVELOPMENT_ROADMAP.md) for the five-region world plan, nine-mission campaign, gameplay modes, systems, MVP targets, phased roadmap, and acceptance criteria from the supplied design brief.
+
+## Known prototype limitations
+
+This is an early playable foundation, not the complete game. It currently uses placeholder geometry and simple enemy behaviour. The campaign, mission/checkpoint system, local progression saves, armour, full enemy state machine, gadgets, final models and animations, audio, boss phases, controller support, adjustable settings, and comprehensive offline/device validation remain to be built. Touch controls and performance have not been verified on real Android devices.
 
 ## Technology and licensing
 
-Three.js is installed as an npm dependency (`three`, MIT license). Project-authored application code and procedural placeholder geometry are included here. Check licences and attribution before adding external assets.
+Three.js is installed as an npm dependency (`three`, MIT license). Project-authored application code and procedural placeholder geometry are included here. The service worker caches the same-origin app shell and assets as they are requested; it is not a substitute for testing a production build offline. Check licences and attribution before adding external assets.
