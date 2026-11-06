@@ -229,6 +229,11 @@ async function loadPolyHavenAsset(assetId, placements, targetHeight) {
     {x:-10,z:4,scale:1.25,rotation:1.2},{x:10,z:8,scale:1.1,rotation:2.8},
     {x:-8,z:29,scale:1.2,rotation:.8},{x:9,z:31,scale:1.3,rotation:2.4}
   ], 2.2);
+  loadPolyHavenAsset('shrub_03', [
+    {x:-18,z:-8,scale:1.05,rotation:1.1},{x:18,z:-5,scale:1.15,rotation:2.4},
+    {x:-19,z:12,scale:1.2,rotation:3.1},{x:19,z:18,scale:1.1,rotation:.2},
+    {x:-18,z:35,scale:1.3,rotation:2.2},{x:18,z:39,scale:1.25,rotation:4.1}
+  ], 2.4);
   loadPolyHavenAsset('fern_02', [
     {x:-6.5,z:-12,scale:.75,rotation:.3},{x:6.8,z:-9,scale:.7,rotation:1.7},
     {x:-7,z:13,scale:.8,rotation:2.1},{x:7.5,z:17,scale:.72,rotation:4.2},
@@ -243,10 +248,13 @@ async function loadPolyHavenAsset(assetId, placements, targetHeight) {
     {x:-6.2,z:-4,scale:1.8,rotation:.5},{x:6.5,z:1,scale:1.6,rotation:2.2},
     {x:-8.2,z:24,scale:1.7,rotation:1.2},{x:8.4,z:27,scale:1.9,rotation:3.4}
   ], .75);
-  // One prominent scanned tree keeps the dense source mesh affordable on mobile.
+  // Scanned tree canopies replace the old cylinder/cone tree silhouettes.
   loadPolyHavenAsset('island_tree_02', [
-    {x:-15,z:16,scale:1.0,rotation:.65}
+    {x:-25,z:-8,scale:.92,rotation:.65},{x:25,z:-1,scale:.88,rotation:2.2}
   ], 7.2);
+  loadPolyHavenAsset('island_tree_01', [
+    {x:-26,z:34,scale:.9,rotation:1.4},{x:26,z:39,scale:.86,rotation:3.5}
+  ], 7.0);
 }
 // Hanging vines around ruins and canopy edges.
 for(let i=0;i<22;i++){
