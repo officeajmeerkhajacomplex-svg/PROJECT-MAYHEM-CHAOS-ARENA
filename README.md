@@ -30,7 +30,7 @@ See [docs/DEVELOPMENT_ROADMAP.md](docs/DEVELOPMENT_ROADMAP.md) for the five-regi
 
 ## Known prototype limitations
 
-This is an early playable foundation, not the complete game. It still uses procedural placeholder geometry and simple enemy behaviour; the Jungle Rush environment is an atmosphere/layout pass, not final art assets. The campaign, mission/checkpoint system, local progression saves, armour, full enemy state machine, gadgets, final models and animations, audio, boss phases, controller support, adjustable settings, and comprehensive offline/device validation remain to be built. Touch controls and performance have not been verified on real Android devices.
+This is an early playable foundation, not the complete game. It still uses procedural placeholder geometry and simple enemy behaviour; the Jungle Rush environment is an atmosphere/layout pass, not final art assets. Generated tileable ground, dirt, bark, stone and water surface maps now add mottled natural variation without external downloads; tree trunks have buttress roots, canopy clusters have additional leaf blades, shared foliage geometry reduces repeated mesh allocation, and water/foam/mist animation now updates tracked effects rather than traversing the entire scene each frame. The campaign, mission/checkpoint system, local progression saves, armour, full enemy state machine, gadgets, final models and animations, audio, boss phases, controller support, adjustable settings, and comprehensive offline/device validation remain to be built. Touch controls and performance have not been verified on real Android devices.
 
 ## Technology and licensing
 
