@@ -9,7 +9,7 @@ const isTouch = matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoi
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x9eb8ad);
-scene.fog = new THREE.FogExp2(0x718a7b, 0.012);
+scene.fog = new THREE.FogExp2(0x718a7b, 0.0085);
 const camera = new THREE.PerspectiveCamera(74, innerWidth/innerHeight, .1, 180);
 camera.rotation.order = 'YXZ';
 const renderer = new THREE.WebGLRenderer({antialias:!isTouch, powerPreference:'high-performance'});
@@ -20,7 +20,8 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 game.appendChild(renderer.domElement);
 
-scene.add(new THREE.HemisphereLight(0xd7f4df,0x34432d,1.75));
+scene.add(new THREE.HemisphereLight(0xd7f4df,0x34432d,1.9));
+scene.add(new THREE.AmbientLight(0x91bca0,0.28));
 const sun = new THREE.DirectionalLight(0xffe5b7,3.1);
 sun.position.set(-25,40,-10); sun.castShadow=!isTouch; sun.shadow.mapSize.set(1024,1024); scene.add(sun);
 
@@ -93,14 +94,14 @@ for(let i=0;i<terrainPositions.count;i++){
 }
 terrainGeometry.computeVertexNormals();
 const ground=new THREE.Mesh(terrainGeometry,floorMaterial);
-ground.rotation.x=-Math.PI/2;ground.position.set(0,-.72,12);ground.receiveShadow=true;environment.add(ground);
+ground.rotation.x=-Math.PI/2;ground.position.set(0,0,12);ground.receiveShadow=true;environment.add(ground);
 
 function makeForestRibbon(curve,width,material,yOffset=.02,segments=140){
  const positions=[],uvs=[],indices=[];
  for(let i=0;i<=segments;i++){
   const t=i/segments,p=curve.getPointAt(t),tan=curve.getTangentAt(t).normalize();
   const side=new THREE.Vector3(tan.z,0,-tan.x).normalize().multiplyScalar(width*.5);
-  const y=forestTerrainHeight(p.x,p.z)-.72+yOffset;
+  const y=forestTerrainHeight(p.x,p.z)+yOffset;
   positions.push(p.x+side.x,y,p.z+side.z,p.x-side.x,y,p.z-side.z);
   uvs.push(0,t*18,1,t*18);
   if(i<segments){const a=i*2;indices.push(a,a+1,a+2,a+1,a+3,a+2);}
@@ -188,7 +189,7 @@ async function loadPineForestCollection(){
   for(const p of placements){
    const instance=p.model.prototype.clone(true);
    instance.scale.setScalar(p.scale);
-   instance.position.set(p.x,forestTerrainHeight(p.x,p.z)-.72-p.model.bounds.min.y*p.scale,p.z);
+   instance.position.set(p.x,forestTerrainHeight(p.x,p.z)-p.model.bounds.min.y*p.scale,p.z);
    instance.rotation.y=p.rotation;
    instance.traverse(node=>{
     if(!node.isMesh)return;
@@ -211,7 +212,7 @@ async function loadPineForestCollection(){
 loadPineForestCollection();
 loadPineForestCollection();
 
-const player={pos:new THREE.Vector3(0,1.7,-7),yaw:Math.PI,pitch:0,health:100,score:0,speed:6,grounded:true,stamina:100,sliding:false,slideTimer:0,slideCooldown:0,slideDir:new THREE.Vector3(),slideBoost:0,crouched:false,recoilKick:0};
+const player={pos:new THREE.Vector3(0,forestTerrainHeight(0,-7)+1.7,-7),yaw:Math.PI,pitch:0,health:100,score:0,speed:6,grounded:true,stamina:100,sliding:false,slideTimer:0,slideCooldown:0,slideDir:new THREE.Vector3(),slideBoost:0,crouched:false,recoilKick:0};
 camera.position.copy(player.pos);
 const weapons=[
  {name:'AR-01',desc:'ASSAULT RIFLE',mag:30,reserve:150,damage:26,rate:115,spread:.012,recoil:.012,auto:true},
@@ -224,7 +225,7 @@ let weaponIndex=0,lastShot=0,reloading=false,paused=true,fireHeld=false,fireTap=
 let enemies=[],lastFrame=performance.now(),velocityY=0,move={x:0,y:0};
 const raycaster=new THREE.Raycaster();
 function spawnEnemy(type,pos){
- const group=new THREE.Group();group.position.copy(pos);scene.add(group);
+ const group=new THREE.Group();group.position.set(pos.x,forestTerrainHeight(pos.x,pos.z),pos.z);scene.add(group);
  const scale=type==='Heavy'?1.55:type==='Boss'?2.7:1;
  const torso=new THREE.Mesh(new THREE.BoxGeometry(.8*scale,1.05*scale,.48*scale),mats.robot);torso.position.y=1.1*scale;torso.castShadow=true;group.add(torso);
  const head=new THREE.Mesh(new THREE.BoxGeometry(.58*scale,.48*scale,.5*scale),mats.metal);head.position.y=1.9*scale;head.castShadow=true;group.add(head);
@@ -286,7 +287,7 @@ function updateEnemies(dt,now){
  for(const e of enemies){if(!e.alive)continue;
   const delta=new THREE.Vector3(player.pos.x-e.group.position.x,0,player.pos.z-e.group.position.z),dist=delta.length();
   if(dist>e.range*.8){delta.normalize();e.group.position.addScaledVector(delta,e.speed*dt);}
-  e.group.lookAt(player.pos.x,e.group.position.y,player.pos.z);
+  e.group.position.y=forestTerrainHeight(e.group.position.x,e.group.position.z);e.group.lookAt(player.pos.x,e.group.position.y,player.pos.z);
   if(dist<e.range&&now>e.nextAttack){e.nextAttack=now+(e.type==='Boss'?850:1450);if(e.type==='Exploder'&&dist<2.3){player.health-=28;e.alive=false;scene.remove(e.group);toast('EXPLOSIVE UNIT DETONATED');}else if(dist<e.range*.72){player.health-=e.damage;toast('INCOMING FIRE');}}
  }
  if(player.health<=0){player.health=0;paused=true;pauseScreen.classList.remove('hidden');pauseScreen.querySelector('h2').innerHTML='MISSION <span>FAILED</span>';$('resume').textContent='REDEPLOY';}
@@ -306,7 +307,7 @@ function startSlide(){
  toast('SLIDE');
 }
 function jumpPlayer(){
- if(player.pos.y<=1.701){
+ if(player.pos.y<=forestTerrainHeight(player.pos.x,player.pos.z)+1.701){
   if(player.sliding){player.sliding=false;player.slideTimer=0;player.slideBoost=.42;toast('SLIDE JUMP');}
   velocityY=player.slideBoost>0?8.4:7.5;player.crouched=false;
  }
@@ -330,7 +331,7 @@ function movePlayer(dt){
  else if(!player.sliding)player.stamina=Math.min(100,player.stamina+17*dt);
  if(player.slideCooldown>0)player.slideCooldown=Math.max(0,player.slideCooldown-dt);
  if(player.slideBoost>0)player.slideBoost=Math.max(0,player.slideBoost-dt);
- velocityY-=20*dt;player.pos.y+=velocityY*dt;if(player.pos.y<1.7){player.pos.y=1.7;velocityY=0;}
+ velocityY-=20*dt;player.pos.y+=velocityY*dt;const floorY=forestTerrainHeight(player.pos.x,player.pos.z)+1.7;if(player.pos.y<floorY){player.pos.y=floorY;velocityY=0;}
  player.pos.x=THREE.MathUtils.clamp(player.pos.x,-28,28);player.pos.z=THREE.MathUtils.clamp(player.pos.z,-22,49);
  const stanceOffset=player.sliding?.52:player.crouched?.34:0;
  player.recoilKick=Math.max(0,player.recoilKick-2.8*dt);
@@ -367,6 +368,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden&&!paused)pa
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,isTouch?1.5:2));});
 function animate(now){
  requestAnimationFrame(animate);const dt=Math.min((now-lastFrame)/1000,.04);lastFrame=now;
+  for(const wind of windObjects)wind.object.rotation.z=Math.sin(now*.00045+wind.phase)*wind.strength;
  if(!paused){movePlayer(dt);updateEnemies(dt,now);if(fireHeld||fireTap)shoot();fireTap=false;}
  renderer.render(scene,camera);
 }
