@@ -11,7 +11,8 @@ const assetIds = [
 const root = path.resolve('public/assets/polyhaven');
 
 function safeRelative(input) {
-  const normalized = String(input).replace(/\\\\/g, '/').replace(/^\\/+/, '');
+  let normalized = String(input).split('\\\\').join('/');
+  while (normalized.startsWith('/')) normalized = normalized.slice(1);
   const parts = normalized.split('/');
   if (parts.some((part) => !part || part === '.' || part === '..')) {
     throw new Error(`Unsafe Poly Haven dependency path: ${input}`);
