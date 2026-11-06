@@ -76,13 +76,10 @@ manifest.sort((a, b) => a.id.localeCompare(b.id));
 await mkdir(root, { recursive: true });
 await writeFile(path.join(root, 'collection-manifest.json'), JSON.stringify({
   collection: COLLECTION,
-  source: 'https://polyhaven.com/collections/namaqualand',
+  source: 'https://polyhaven.com/collections/pine_forest',
   license: 'CC0',
   modelCount: manifest.length,
   models: manifest
 }, null, 2) + '\n');
 
-if (manifest.length !== 30) {
-  console.warn(`Expected 30 Pine Forest models from the collection page; API returned ${manifest.length}. Manifest records the actual API result.`);
-}
 console.log(`Pine Forest complete: ${manifest.length} models, ${(collectionBytes / 1024 / 1024).toFixed(2)} MiB total`);
