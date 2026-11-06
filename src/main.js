@@ -101,7 +101,7 @@ function addRock(x,y,z,sx,sy,sz,material=mats.stone){
   rock.scale.set(sx,sy,sz);rock.rotation.set(Math.random()*.4,Math.random()*Math.PI,Math.random()*.35);return rock;
 }
 const treeCrownGeometry=new THREE.IcosahedronGeometry(1,1);
-const treeLeafGeometry=treeLeafGeometry;
+const treeLeafGeometry=new THREE.SphereGeometry(.42,7,5);
 function addTree(x,z,scale=1,variant=0){
   const g=new THREE.Group();g.position.set(x,0,z);g.scale.setScalar(scale);environment.add(g);
   const trunk=addMesh(new THREE.CylinderGeometry(.2,.42,4.7,8),mats.bark,0,2.25,0,g);
