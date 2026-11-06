@@ -1,30 +1,29 @@
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=Rajdhani:wght@500;600;700&display=swap');
-:root{font-family:'Rajdhani',sans-serif;color:#e9f4ec;background:#071012;font-synthesis:none;text-rendering:optimizeLegibility}
+ :root{font-family:'Trebuchet MS',Arial,sans-serif;color:#e9f4ec;background:#071012;font-synthesis:none;text-rendering:optimizeLegibility}
 *{box-sizing:border-box}html,body,#game{margin:0;width:100%;height:100%;overflow:hidden}body{touch-action:none}canvas{display:block}
 .screen{position:fixed;inset:0;display:grid;place-items:center;background:linear-gradient(110deg,rgba(3,12,14,.92),rgba(3,12,14,.45)),radial-gradient(ellipse at 72% 48%,rgba(26,111,81,.22),transparent 55%);z-index:5;padding:20px}
 .menu-panel{width:min(560px,100%);padding:clamp(24px,5vw,48px);background:rgba(7,19,20,.88);border:1px solid rgba(118,222,161,.35);box-shadow:0 24px 90px #000a;backdrop-filter:blur(12px);position:relative}
 .menu-panel:before{content:"";position:absolute;left:-1px;top:-1px;width:90px;height:4px;background:#8ff5a7}
 .eyebrow{font-size:11px;letter-spacing:.22em;color:#8ff5a7;font-weight:700}
-h1{font:900 clamp(48px,10vw,76px)/.82 'Barlow Condensed',sans-serif;letter-spacing:-.03em;margin:24px 0 8px}
-h1 span,h2 span{color:#9cf5a5}.subtitle{font:700 25px 'Barlow Condensed';letter-spacing:.35em;color:#e2f6e5}
+h1{font:900 clamp(48px,10vw,76px)/.82 'Arial Narrow',Impact,sans-serif;letter-spacing:-.03em;margin:24px 0 8px}
+h1 span,h2 span{color:#9cf5a5}.subtitle{font:700 25px 'Arial Narrow',Impact,sans-serif;letter-spacing:.35em;color:#e2f6e5}
 .brief{color:#a8beb2;line-height:1.5;margin:24px 0}
-.mission{border:1px solid #345347;padding:13px 16px;display:grid;gap:3px;margin:20px 0 24px}.mission span,.mission small{font-size:10px;letter-spacing:.18em;color:#84c69a}.mission b{font:700 23px 'Barlow Condensed';letter-spacing:.08em}
-button{font:800 18px 'Barlow Condensed';letter-spacing:.12em;border:0;background:#a4f4a9;color:#092015;padding:15px 20px;cursor:pointer}
+.mission{border:1px solid #345347;padding:13px 16px;display:grid;gap:3px;margin:20px 0 24px}.mission span,.mission small{font-size:10px;letter-spacing:.18em;color:#84c69a}.mission b{font:700 23px 'Arial Narrow',Impact,sans-serif;letter-spacing:.08em}
+button{font:800 18px 'Arial Narrow',Impact,sans-serif;letter-spacing:.12em;border:0;background:#a4f4a9;color:#092015;padding:15px 20px;cursor:pointer}
 #start{width:100%;transition:.18s}#start:hover{background:#d1ffd1;transform:translateY(-2px)}
 .controls-note{font-size:10px;line-height:1.7;letter-spacing:.08em;color:#8ba59a;margin-top:20px}
 .hidden{display:none!important}
 #hud{position:fixed;inset:0;pointer-events:none;z-index:2;text-shadow:0 2px 6px #000}
 .hud-top{position:absolute;top:0;left:0;right:0;padding:22px 28px;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(#04100dcc,transparent);font-size:12px;letter-spacing:.16em}
-.brand{font:800 19px 'Barlow Condensed';letter-spacing:.1em}.brand i{color:#9cf5a5;font-style:normal;margin:0 5px}
+.brand{font:800 19px 'Arial Narrow',Impact,sans-serif;letter-spacing:.1em}.brand i{color:#9cf5a5;font-style:normal;margin:0 5px}
 #objective{color:#b9d7c1}.hud-bottom{position:absolute;bottom:25px;left:28px;right:28px;display:flex;align-items:end;justify-content:space-between}
-.health{width:210px}.health span,.weapon small{font-size:11px;letter-spacing:.18em;color:#9de5ac}.health strong{display:block;font:700 38px 'Barlow Condensed'}
+.health{width:210px}.health span,.weapon small{font-size:11px;letter-spacing:.18em;color:#9de5ac}.health strong{display:block;font:700 38px 'Arial Narrow',Impact,sans-serif}
 .bar{height:5px;background:#263a32;margin-top:4px}.bar i{display:block;height:100%;width:100%;background:#9cf5a5;transition:width .2s}
-.weapon{text-align:right}.weapon strong{display:block;font:800 38px 'Barlow Condensed'}.weapon em{font:600 18px 'Rajdhani';color:#9bb4a4;font-style:normal}.weapon span{font-size:10px;letter-spacing:.2em;color:#9cf5a5}
+.weapon{text-align:right}.weapon strong{display:block;font:800 38px 'Arial Narrow',Impact,sans-serif}.weapon em{font:600 18px Arial;color:#9bb4a4;font-style:normal}.weapon span{font-size:10px;letter-spacing:.2em;color:#9cf5a5}
 .crosshair{position:absolute;left:50%;top:50%;width:22px;height:22px;transform:translate(-50%,-50%);opacity:.9}.crosshair:before,.crosshair:after{content:"";position:absolute;background:#d9ffe0;box-shadow:0 0 6px #9cf5a5}.crosshair:before{width:2px;height:18px;left:10px;top:2px}.crosshair:after{height:2px;width:18px;left:2px;top:10px}
 #hitmarker{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:34px;color:#fff;opacity:0}#toast{position:absolute;top:17%;left:50%;transform:translateX(-50%);color:#a5ffb3;font-weight:700;letter-spacing:.15em}
 #mobile{position:fixed;inset:0;z-index:3;pointer-events:none}.mobile-actions{position:absolute;right:22px;bottom:24px;display:flex;align-items:end;gap:10px;pointer-events:auto}.mobile-actions button{font-size:13px;padding:13px 12px;background:#a5f3adcc;min-width:64px}.mobile-actions #fire{width:86px;height:86px;border-radius:50%;background:#f1a64ddd;border:3px solid #ffe1a1}
 #stick-zone{position:absolute;left:22px;bottom:25px;width:142px;height:142px;border:1px solid #c7ffd055;border-radius:50%;background:#10251c66;pointer-events:auto;touch-action:none}
 #stick{position:absolute;left:50%;top:50%;width:62px;height:62px;transform:translate(-50%,-50%);border:1px solid #c7ffd0aa;border-radius:50%;background:#9cf5a544;display:grid;place-items:center}
 #stick div{width:13px;height:13px;border-radius:50%;background:#caffd1}
-.compact{max-width:380px;text-align:center}.compact h2{font:900 42px 'Barlow Condensed'}
+.compact{max-width:380px;text-align:center}.compact h2{font:900 42px 'Arial Narrow',Impact,sans-serif}
 @media(max-width:700px){.hud-top{padding:12px;font-size:9px}.brand{font-size:14px}#objective{max-width:120px;text-align:center}.hud-bottom{bottom:180px;left:14px;right:14px}.health{width:120px}.health strong,.weapon strong{font-size:28px}.weapon small{font-size:9px}.weapon em{font-size:13px}.health span{font-size:9px}.mobile-actions{right:12px;bottom:20px;gap:6px}.mobile-actions button{font-size:10px;min-width:54px;padding:11px 8px}#stick-zone{left:12px;bottom:20px;width:126px;height:126px}.controls-note{font-size:9px}}
