@@ -74,7 +74,7 @@ MVP acceptance: launch offline, complete initial missions, fight enemies, use we
 
 ## Current repository state
 
-The current browser build is an early Jungle Rush greybox prototype. It has a Three.js scene, basic first-person movement, five weapon profiles, five robot prototypes (including a boss), simple enemy pursuit/attack, HUD, and mobile touch controls. A web app manifest and service worker shell cache are included as the first offline-install foundation.
+The current browser build has a first-person combat prototype and an expanded procedural Jungle Rush environment slice: layered tropical vegetation, a winding river and stone bridge, ancient ruins, a cave entrance, a research outpost, a distant waterfall, animated water, mist, drifting ambient particles, and stylized sunlight beams. It still uses placeholder geometry and has not passed a production art or device-performance review. The combat prototype includes five weapon profiles, five robot prototypes (including a boss), simple enemy pursuit/attack, HUD, and mobile touch controls. A web app manifest and service worker shell cache are included as the first offline-install foundation.
 
 Not yet implemented: the full campaign and regions, mission/checkpoint system, local progression saves, armour, complete enemy state machine, gadgets, final art/models/animations, audio, boss phases, controller support, adjustable settings, and comprehensive offline/device validation.
 
