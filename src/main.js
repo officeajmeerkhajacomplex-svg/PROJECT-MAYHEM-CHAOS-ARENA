@@ -28,6 +28,45 @@ const mats={
  bark:mat(0x543923), stone:mat(0x667467), metal:mat(0x27383a,.55,.7),
  robot:mat(0xb34b2d,.45,.45), glow:mat(0x68f4d3,.25,.2), gold:mat(0xf4b942,.4,.3)
 };
+// Lightweight, generated tileable surface maps: no network fetch or external asset dependency.
+function makeSurfaceTexture(kind,size=256){
+ const canvas=document.createElement('canvas');canvas.width=canvas.height=size;
+ const ctx=canvas.getContext('2d');
+ const palettes={
+  ground:['#314d32','#536b3a','#776744','#263d2e'],
+  dirt:['#5b452e','#82613b','#a17b4c','#443523'],
+  bark:['#34251b','#60432a','#88603b','#201c17'],
+  stone:['#555e51','#7c806e','#a0a08a','#3d4943'],
+  water:['#0d5962','#168b91','#35a9a0','#0b3e50']
+ };
+ const colors=palettes[kind]||palettes.ground;
+ ctx.fillStyle=colors[0];ctx.fillRect(0,0,size,size);
+ for(let i=0;i<15000;i++){
+  const x=Math.random()*size,y=Math.random()*size,r=Math.random()*(kind==='ground'?3.2:2.1);
+  ctx.globalAlpha=.08+Math.random()*.23;ctx.fillStyle=colors[(Math.random()*colors.length)|0];
+  if(kind==='bark'){ctx.fillRect(x,y,1+Math.random()*3,4+Math.random()*22);}
+  else if(kind==='water'){ctx.fillRect(x,y,2+Math.random()*22,.5+Math.random()*1.5);}
+  else{ctx.beginPath();ctx.ellipse(x,y,r,r*(.35+Math.random()),Math.random()*Math.PI,0,Math.PI*2);ctx.fill();}
+ }
+ if(kind==='ground'){
+  for(let i=0;i<420;i++){ctx.globalAlpha=.28;ctx.fillStyle=Math.random()>.5?'#b5a16a':'#182c20';ctx.save();ctx.translate(Math.random()*size,Math.random()*size);ctx.rotate(Math.random()*3);ctx.fillRect(0,0,1+Math.random()*2,4+Math.random()*9);ctx.restore();}
+ }
+ ctx.globalAlpha=1;
+ const texture=new THREE.CanvasTexture(canvas);texture.wrapS=texture.wrapT=THREE.RepeatWrapping;
+ texture.colorSpace=THREE.SRGBColorSpace;texture.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
+ return texture;
+}
+const surfaceMaps={
+ ground:makeSurfaceTexture('ground'),dirt:makeSurfaceTexture('dirt'),bark:makeSurfaceTexture('bark'),
+ stone:makeSurfaceTexture('stone'),water:makeSurfaceTexture('water')
+};
+surfaceMaps.ground.repeat.set(10,10);surfaceMaps.dirt.repeat.set(3,18);
+surfaceMaps.bark.repeat.set(1,2);surfaceMaps.stone.repeat.set(2,2);surfaceMaps.water.repeat.set(2,12);
+mats.ground.map=surfaceMaps.ground;mats.ground.color.set(0xffffff);mats.ground.needsUpdate=true;
+mats.bark.map=surfaceMaps.bark;mats.bark.color.set(0xffffff);mats.bark.needsUpdate=true;
+mats.stone.map=surfaceMaps.stone;mats.stone.color.set(0xffffff);mats.stone.needsUpdate=true;
+mats.mud.map=surfaceMaps.dirt;mats.mud.color.set(0xffffff);mats.mud.needsUpdate=true;
+
 function box(x,y,z,sx,sy,sz,material,cast=true){
  const m=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),material);m.position.set(x,y,z);m.castShadow=cast;m.receiveShadow=true;scene.add(m);return m;
 }
@@ -40,7 +79,7 @@ const environment = new THREE.Group();
 scene.add(environment);
 const envClock = { time: 0 };
 const envMaterials = {
-  water: new THREE.MeshPhysicalMaterial({color:0x168b91,roughness:.19,metalness:.08,clearcoat:.9,clearcoatRoughness:.12,transparent:true,opacity:.88}),
+  water: new THREE.MeshPhysicalMaterial({color:0xffffff,map:surfaceMaps.water,roughness:.16,metalness:.12,clearcoat:1,clearcoatRoughness:.08,transparent:true,opacity:.94,envMapIntensity:1.2}),
   waterFoam: new THREE.MeshBasicMaterial({color:0xb8fff0,transparent:true,opacity:.42}),
   leafDark: mat(0x164c2d,.92), leafBright:mat(0x3c9148,.86), leafLight:mat(0x72a94b,.8),
   fern:mat(0x287b43,.9), flowerA:mat(0xffc45c,.65), flowerB:mat(0xf27e75,.65),
@@ -64,6 +103,8 @@ function addTree(x,z,scale=1,variant=0){
   const g=new THREE.Group();g.position.set(x,0,z);g.scale.setScalar(scale);environment.add(g);
   const trunk=addMesh(new THREE.CylinderGeometry(.2,.42,4.7,8),mats.bark,0,2.25,0,g);
   trunk.rotation.z=(Math.random()-.5)*.12;
+  // Buttress roots make the rainforest trunks feel rooted in the damp forest floor.
+  for(let root=0;root<5;root++){const a=root*Math.PI*2/5;const buttress=addMesh(new THREE.ConeGeometry(.42,.95,5),mats.bark,Math.cos(a)*.48,.42,Math.sin(a)*.48,g);buttress.rotation.z=Math.cos(a)*.9;buttress.rotation.x=-Math.sin(a)*.9;}
   for(let b=0;b<4;b++){
     const branch=addMesh(new THREE.CylinderGeometry(.055,.13,1.65,6),mats.bark,(b%2?-.55:.55),3.1,(b-1.5)*.22,g);
     branch.rotation.z=(b%2?-.75:.75);branch.rotation.x=(b-1.5)*.12;
@@ -73,6 +114,7 @@ function addTree(x,z,scale=1,variant=0){
     const crown=addMesh(new THREE.IcosahedronGeometry(.95+Math.random()*.42,1),variant%2?envMaterials.leafDark:envMaterials.leafBright,
       Math.cos(a)*r,4.5+Math.random()*.8,Math.sin(a)*r,g);
     crown.scale.set(1.15,.72,1);crown.rotation.y=Math.random()*Math.PI;
+    for(let leaf=0;leaf<3;leaf++){const blade=addMesh(new THREE.SphereGeometry(.42,7,5),leaf%2?envMaterials.leafLight:envMaterials.leafBright,Math.cos(a+leaf*.55)*(r+.42),4.8+Math.random()*.45,Math.sin(a+leaf*.55)*(r+.42),g,false);blade.scale.set(.22,.07,.82);blade.rotation.y=a+leaf*.55;blade.rotation.z=-.22;}
   }
   const mossPatch=addMesh(new THREE.SphereGeometry(.72,8,6),envMaterials.moss,0,.25,.18,g,false);
   mossPatch.scale.set(1,.22,.8);
@@ -112,7 +154,8 @@ function addArch(x,z,width=8,height=5){
 // A broad forest floor with layered terrain edges instead of visible arena walls.
 const ground=addMesh(new THREE.PlaneGeometry(112,124),mats.ground,0,-.72,12);
 ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;
-const path=addMesh(new THREE.PlaneGeometry(9,62),mat(0x806747,.98),0,-.695,10);path.rotation.x=-Math.PI/2;path.rotation.z=.035;
+const pathMaterial=mat(0xffffff,.98);pathMaterial.map=surfaceMaps.dirt;pathMaterial.map.repeat.set(2,16);pathMaterial.needsUpdate=true;
+const path=addMesh(new THREE.PlaneGeometry(9,62),pathMaterial,0,-.695,10);path.rotation.x=-Math.PI/2;path.rotation.z=.035;
 for(let i=0;i<22;i++){
   const side=i%2?1:-1, z=-30+i*4.4;
   addRock(side*(29+Math.random()*7),-.4,z,5+Math.random()*4,3+Math.random()*4,5+Math.random()*4, i%3?mats.stone:envMaterials.ruinDark);
@@ -133,7 +176,7 @@ const river=addMesh(riverGeo,envMaterials.water,0,0,0);river.material.side=THREE
 for(let i=0;i<45;i++){
   const t=Math.random(),p=riverCurve.getPoint(t),tan=riverCurve.getTangent(t);
   const foam=addMesh(new THREE.SphereGeometry(.08+Math.random()*.13,6,5),envMaterials.waterFoam,p.x+(Math.random()-.5)*3,-.43,p.z+(Math.random()-.5)*3,environment,false);
-  foam.scale.set(1.8,.25,.7);foam.userData.flowOffset=Math.random()*6;
+  foam.scale.set(1.8,.25,.7);foam.userData.flowOffset=Math.random()*6;foam.userData.flowBaseX=foam.position.x;foam.userData.flowBaseZ=foam.position.z;
 }
 for(let i=0;i<42;i++){
   const t=Math.random(),p=riverCurve.getPoint(t),tan=riverCurve.getTangent(t);
@@ -378,10 +421,9 @@ addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updat
 function animate(now){
  requestAnimationFrame(animate);const dt=Math.min((now-lastFrame)/1000,.04);lastFrame=now;
  envClock.time+=dt;
- const waterPos=river.geometry.attributes.position;
- for(let i=0;i<waterPos.count;i++){const x=waterPos.getX(i),z=waterPos.getZ(i);waterPos.setY(i,-.48+Math.sin(envClock.time*1.8+x*.16+z*.12)*.035);}
- waterPos.needsUpdate=true;river.geometry.computeVertexNormals();
- environment.traverse(child=>{if(child.userData.waterfall)child.position.y=4.7+Math.sin(envClock.time*3+child.position.x)*.08;if(child.userData.mist){child.position.y=.3+Math.abs(Math.sin(envClock.time*.7+child.userData.phase))*1.6;child.position.x+=Math.sin(envClock.time*.35+child.userData.phase)*.002;}});
+ surfaceMaps.water.offset.x=(envClock.time*.018)%1;
+ surfaceMaps.water.offset.y=(envClock.time*.045)%1;
+ environment.traverse(child=>{if(child.userData.waterfall)child.position.y=4.7+Math.sin(envClock.time*3+child.position.x)*.08;if(child.userData.mist){child.position.y=.3+Math.abs(Math.sin(envClock.time*.7+child.userData.phase))*1.6;child.position.x+=Math.sin(envClock.time*.35+child.userData.phase)*.002;}if(child.userData.flowBaseX!==undefined){child.position.x=child.userData.flowBaseX+Math.sin(envClock.time*1.4+child.userData.flowOffset)*.35;child.position.z=child.userData.flowBaseZ+Math.cos(envClock.time*1.1+child.userData.flowOffset)*.45;}});
  const mp=moteGeo.attributes.position;for(let i=0;i<moteCount;i++){const phase=motePhases[i];mp.setX(i,motePositions[i*3]+Math.sin(envClock.time*.35+phase)*.18);mp.setY(i,motePositions[i*3+1]+Math.sin(envClock.time*.7+phase)*.24);mp.setZ(i,motePositions[i*3+2]+Math.cos(envClock.time*.28+phase)*.16);}mp.needsUpdate=true;
  if(!paused){movePlayer(dt);updateEnemies(dt,now);if(fireHeld||fireTap)shoot();fireTap=false;}
  renderer.render(scene,camera);
