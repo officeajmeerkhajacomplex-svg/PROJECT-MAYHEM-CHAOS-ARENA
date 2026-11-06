@@ -1,0 +1,44 @@
+name: Vendor bolt-action rifle
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/vendor-polyhaven-rifle.mjs'
+      - '.github/workflows/vendor-rifle.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: vendor-bolt-action-rifle
+  cancel-in-progress: true
+jobs:
+  vendor-rifle:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install glTF optimization tools
+        run: npm install --global @gltf-transform/cli@4.5.1
+      - name: Download and optimize Poly Haven rifle
+        run: node scripts/vendor-polyhaven-rifle.mjs
+      - name: Commit rifle asset
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/assets/weapons
+          if git diff --cached --quiet; then
+            echo "Rifle asset already current"
+          else
+            git commit -m "Vendor Poly Haven Bolt Action Rifle 7.62"
+            for attempt in 1 2 3; do
+              git pull --rebase origin main
+              if git push origin HEAD:main; then exit 0; fi
+              sleep $((attempt * 5))
+            done
+            exit 1
+          fi
