@@ -71,15 +71,11 @@ mats.mud.map=surfaceMaps.dirt;mats.mud.color.set(0xffffff);mats.mud.needsUpdate=
 function box(x,y,z,sx,sy,sz,material,cast=true){
  const m=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),material);m.position.set(x,y,z);m.castShadow=cast;m.receiveShadow=true;scene.add(m);return m;
 }
-function tree(x,z,s=1){
- const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.22*s,.34*s,3.2*s,7),mats.bark);trunk.position.set(x,1.6*s,z);trunk.castShadow=true;scene.add(trunk);
- for(let i=0;i<3;i++){const crown=new THREE.Mesh(new THREE.IcosahedronGeometry((1.25-i*.12)*s,1),i%2?mats.leaf:mats.leaf2);crown.position.set(x+(i-1)*.36*s,3.0*s+i*.42*s,z+(i%2-.5)*.3*s);crown.castShadow=true;scene.add(crown);}
-}
 // JUNGLE RUSH — handcrafted procedural environment slice
 const environment = new THREE.Group();
 scene.add(environment);
 const envClock = { time: 0 };
-const animatedVeils=[], animatedMist=[], flowingFoam=[], animatedCanopy=[];
+const animatedVeils=[], animatedMist=[], flowingFoam=[];
 const envMaterials = {
   water: new THREE.MeshPhysicalMaterial({color:0xffffff,map:surfaceMaps.water,roughness:.16,metalness:.12,clearcoat:1,clearcoatRoughness:.08,transparent:true,opacity:.94,envMapIntensity:1.2}),
   waterFoam: new THREE.MeshBasicMaterial({color:0xb8fff0,transparent:true,opacity:.42}),
@@ -100,27 +96,6 @@ function addBox(x,y,z,sx,sy,sz,material,parent=environment,rotationY=0){
 function addRock(x,y,z,sx,sy,sz,material=mats.stone){
   const rock=addMesh(new THREE.IcosahedronGeometry(1,1),material,x,y,z);
   rock.scale.set(sx,sy,sz);rock.rotation.set(Math.random()*.4,Math.random()*Math.PI,Math.random()*.35);return rock;
-}
-const treeCrownGeometry=new THREE.IcosahedronGeometry(1,1);
-function addTree(x,z,scale=1,variant=0){
-  const g=new THREE.Group();g.position.set(x,0,z);g.scale.setScalar(scale);environment.add(g);
-  const trunk=addMesh(new THREE.CylinderGeometry(.2,.42,4.7,8),mats.bark,0,2.25,0,g);
-  trunk.rotation.z=(Math.random()-.5)*.12;
-  // Buttress roots make the rainforest trunks feel rooted in the damp forest floor.
-  for(let root=0;root<5;root++){const a=root*Math.PI*2/5;const buttress=addMesh(new THREE.ConeGeometry(.42,.95,5),mats.bark,Math.cos(a)*.48,.42,Math.sin(a)*.48,g);buttress.rotation.z=Math.cos(a)*.9;buttress.rotation.x=-Math.sin(a)*.9;}
-  for(let b=0;b<4;b++){
-    const branch=addMesh(new THREE.CylinderGeometry(.055,.13,1.65,6),mats.bark,(b%2?-.55:.55),3.1,(b-1.5)*.22,g);
-    branch.rotation.z=(b%2?-.75:.75);branch.rotation.x=(b-1.5)*.12;
-  }
-  for(let c=0;c<7;c++){
-    const a=c*Math.PI*2/7, r=.85+Math.random()*.45;
-    const crown=addMesh(treeCrownGeometry,variant%2?envMaterials.leafDark:envMaterials.leafBright,
-      Math.cos(a)*r,4.5+Math.random()*.8,Math.sin(a)*r,g);
-    crown.scale.set(1.15,.72,1);crown.rotation.y=Math.random()*Math.PI;crown.userData.windPhase=Math.random()*6.28;crown.userData.baseZ=crown.rotation.z;animatedCanopy.push(crown);
-  }
-  const mossPatch=addMesh(new THREE.SphereGeometry(.72,8,6),envMaterials.moss,0,.25,.18,g,false);
-  mossPatch.scale.set(1,.22,.8);
-  return g;
 }
 const fernGeometry=(()=>{
  const positions=[],indices=[];
@@ -229,23 +204,11 @@ for(let i=0;i<3;i++){
 }
 addRock(0,-.4,-.3,7,2.2,3.2,mats.stone).position.x=25;
 for(let i=0;i<12;i++){const splash=addMesh(new THREE.SphereGeometry(.22+Math.random()*.35,7,5),envMaterials.waterFoam,24+(Math.random()-.5)*5,.1+Math.random()*2,9+(Math.random()-.5)*3,environment,false);splash.userData.mist=true;splash.userData.phase=Math.random()*6.28;splash.userData.baseX=splash.position.x;animatedMist.push(splash);}
-// Dense canopy perimeter, mid-height palms, understory ferns and flowering ground cover.
-const trees=[];
-for(let i=0;i<(isTouch?42:68);i++){
-  const angle=Math.random()*Math.PI*2,r=22+Math.random()*28,x=Math.cos(angle)*r,z=8+Math.sin(angle)*r*1.18;
-  if(Math.abs(x)<6&&z<35&&z>-15)continue;
-  trees.push(addTree(x,z,.78+Math.random()*.75,i));
-}
+// Understory ferns and flowering ground cover. Island Tree 02 supplies the tree canopy; primitive tree and palm meshes are removed.
 for(let i=0;i<(isTouch?65:125);i++){
   const x=(Math.random()-.5)*58,z=-29+Math.random()*70;
   if(Math.abs(x)<5&&z<34&&z>-15)continue;
   addFern(x,z,.55+Math.random()*.85,Math.random()>.86);
-}
-for(let i=0;i<(isTouch?15:26);i++){
-  const x=(Math.random()-.5)*54,z=-24+Math.random()*64;
-  const palm=new THREE.Group();palm.position.set(x,0,z);palm.rotation.y=Math.random()*6.28;environment.add(palm);
-  addMesh(new THREE.CylinderGeometry(.12,.22,5.5,7),mats.bark,0,2.7,0,palm).rotation.z=.12;
-  for(let f=0;f<7;f++){const frond=addMesh(new THREE.ConeGeometry(.28,3.6,5),f%2?envMaterials.leafDark:envMaterials.leafBright,Math.cos(f*6.28/7)*1.25,5.15,Math.sin(f*6.28/7)*1.25,palm,false);frond.rotation.z=-Math.cos(f*6.28/7)*.9;frond.rotation.x=Math.sin(f*6.28/7)*.9;}
 }
 // Optional real-world foliage and rock dressing from Poly Haven (CC0).
 // Procedural scenery remains in place as an offline-safe fallback; remote models
@@ -300,12 +263,14 @@ if (navigator.onLine) {
     {x:-6.2,z:-4,scale:1.8,rotation:.5},{x:6.5,z:1,scale:1.6,rotation:2.2},
     {x:-8.2,z:24,scale:1.7,rotation:1.2},{x:8.4,z:27,scale:1.9,rotation:3.4}
   ], .75);
-  // Island Tree 02: large hero tree dressing on the outer jungle ridgeline.
-  loadPolyHavenAsset('island_tree_02', [
+  // Island Tree 02 replaces the former low-poly procedural trees and palms.
+  // Limit copies on touch devices to keep the detailed model affordable.
+  const islandTreePlacements = [
     {x:-24.5,z:-12,scale:1.05,rotation:.65},
     {x:24.2,z:-3,scale:1.0,rotation:2.45},
     {x:-25.5,z:35,scale:.92,rotation:1.8}
-  ], 7.2);
+  ];
+  loadPolyHavenAsset('island_tree_02', isTouch ? islandTreePlacements.slice(0,1) : islandTreePlacements, 7.2);
 }
 
 // Hanging vines around ruins and canopy edges.
@@ -493,7 +458,7 @@ function animate(now){
  envClock.time+=dt;
  surfaceMaps.water.offset.x=(envClock.time*.018)%1;
  surfaceMaps.water.offset.y=(envClock.time*.045)%1;
- for(const canopy of animatedCanopy){canopy.rotation.z=canopy.userData.baseZ+Math.sin(envClock.time*.8+canopy.userData.windPhase)*.025;canopy.rotation.x=Math.cos(envClock.time*.65+canopy.userData.windPhase)*.018;}
+
  for(const veil of animatedVeils)veil.position.y=4.7+Math.sin(envClock.time*3+veil.position.x)*.08;
  for(const puff of animatedMist){puff.position.y=.3+Math.abs(Math.sin(envClock.time*.7+puff.userData.phase))*1.6;puff.position.x=puff.userData.baseX+Math.sin(envClock.time*.35+puff.userData.phase)*.3;}
  for(const foam of flowingFoam){foam.position.x=foam.userData.flowBaseX+Math.sin(envClock.time*1.4+foam.userData.flowOffset)*.35;foam.position.z=foam.userData.flowBaseZ+Math.cos(envClock.time*1.1+foam.userData.flowOffset)*.45;}
