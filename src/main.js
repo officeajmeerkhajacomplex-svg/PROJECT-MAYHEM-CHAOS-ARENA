@@ -78,6 +78,7 @@ function tree(x,z,s=1){
 const environment = new THREE.Group();
 scene.add(environment);
 const envClock = { time: 0 };
+const animatedVeils=[], animatedMist=[], flowingFoam=[];
 const envMaterials = {
   water: new THREE.MeshPhysicalMaterial({color:0xffffff,map:surfaceMaps.water,roughness:.16,metalness:.12,clearcoat:1,clearcoatRoughness:.08,transparent:true,opacity:.94,envMapIntensity:1.2}),
   waterFoam: new THREE.MeshBasicMaterial({color:0xb8fff0,transparent:true,opacity:.42}),
@@ -99,6 +100,8 @@ function addRock(x,y,z,sx,sy,sz,material=mats.stone){
   const rock=addMesh(new THREE.IcosahedronGeometry(1,1),material,x,y,z);
   rock.scale.set(sx,sy,sz);rock.rotation.set(Math.random()*.4,Math.random()*Math.PI,Math.random()*.35);return rock;
 }
+const treeCrownGeometry=new THREE.IcosahedronGeometry(1,1);
+const treeLeafGeometry=treeLeafGeometry;
 function addTree(x,z,scale=1,variant=0){
   const g=new THREE.Group();g.position.set(x,0,z);g.scale.setScalar(scale);environment.add(g);
   const trunk=addMesh(new THREE.CylinderGeometry(.2,.42,4.7,8),mats.bark,0,2.25,0,g);
@@ -111,7 +114,7 @@ function addTree(x,z,scale=1,variant=0){
   }
   for(let c=0;c<7;c++){
     const a=c*Math.PI*2/7, r=.85+Math.random()*.45;
-    const crown=addMesh(new THREE.IcosahedronGeometry(.95+Math.random()*.42,1),variant%2?envMaterials.leafDark:envMaterials.leafBright,
+    const crown=addMesh(treeCrownGeometry,variant%2?envMaterials.leafDark:envMaterials.leafBright,
       Math.cos(a)*r,4.5+Math.random()*.8,Math.sin(a)*r,g);
     crown.scale.set(1.15,.72,1);crown.rotation.y=Math.random()*Math.PI;
     for(let leaf=0;leaf<3;leaf++){const blade=addMesh(new THREE.SphereGeometry(.42,7,5),leaf%2?envMaterials.leafLight:envMaterials.leafBright,Math.cos(a+leaf*.55)*(r+.42),4.8+Math.random()*.45,Math.sin(a+leaf*.55)*(r+.42),g,false);blade.scale.set(.22,.07,.82);blade.rotation.y=a+leaf*.55;blade.rotation.z=-.22;}
@@ -176,7 +179,7 @@ const river=addMesh(riverGeo,envMaterials.water,0,0,0);river.material.side=THREE
 for(let i=0;i<45;i++){
   const t=Math.random(),p=riverCurve.getPoint(t),tan=riverCurve.getTangent(t);
   const foam=addMesh(new THREE.SphereGeometry(.08+Math.random()*.13,6,5),envMaterials.waterFoam,p.x+(Math.random()-.5)*3,-.43,p.z+(Math.random()-.5)*3,environment,false);
-  foam.scale.set(1.8,.25,.7);foam.userData.flowOffset=Math.random()*6;foam.userData.flowBaseX=foam.position.x;foam.userData.flowBaseZ=foam.position.z;
+  foam.scale.set(1.8,.25,.7);foam.userData.flowOffset=Math.random()*6;foam.userData.flowBaseX=foam.position.x;foam.userData.flowBaseZ=foam.position.z;flowingFoam.push(foam);
 }
 for(let i=0;i<42;i++){
   const t=Math.random(),p=riverCurve.getPoint(t),tan=riverCurve.getTangent(t);
@@ -216,10 +219,10 @@ for(let i=0;i<8;i++)addRock(-29+Math.random()*8,-.35,28+Math.random()*7,.8+Math.
 const falls=new THREE.Group();falls.position.set(25,0,10);environment.add(falls);
 for(let i=0;i<3;i++){
   const veil=addMesh(new THREE.PlaneGeometry(2.1+i*.25,10-i*.4),envMaterials.waterfall,(i-1)*1.65,4.7,-.1,falls,false);
-  veil.userData.waterfall=true;veil.rotation.y=(i-1)*.12;
+  veil.userData.waterfall=true;veil.rotation.y=(i-1)*.12;animatedVeils.push(veil);
 }
 addRock(0,-.4,-.3,7,2.2,3.2,mats.stone).position.x=25;
-for(let i=0;i<12;i++){const splash=addMesh(new THREE.SphereGeometry(.22+Math.random()*.35,7,5),envMaterials.waterFoam,24+(Math.random()-.5)*5,.1+Math.random()*2,9+(Math.random()-.5)*3,environment,false);splash.userData.mist=true;splash.userData.phase=Math.random()*6.28;}
+for(let i=0;i<12;i++){const splash=addMesh(new THREE.SphereGeometry(.22+Math.random()*.35,7,5),envMaterials.waterFoam,24+(Math.random()-.5)*5,.1+Math.random()*2,9+(Math.random()-.5)*3,environment,false);splash.userData.mist=true;splash.userData.phase=Math.random()*6.28;splash.userData.baseX=splash.position.x;animatedMist.push(splash);}
 // Dense canopy perimeter, mid-height palms, understory ferns and flowering ground cover.
 const trees=[];
 for(let i=0;i<76;i++){
@@ -423,7 +426,9 @@ function animate(now){
  envClock.time+=dt;
  surfaceMaps.water.offset.x=(envClock.time*.018)%1;
  surfaceMaps.water.offset.y=(envClock.time*.045)%1;
- environment.traverse(child=>{if(child.userData.waterfall)child.position.y=4.7+Math.sin(envClock.time*3+child.position.x)*.08;if(child.userData.mist){child.position.y=.3+Math.abs(Math.sin(envClock.time*.7+child.userData.phase))*1.6;child.position.x+=Math.sin(envClock.time*.35+child.userData.phase)*.002;}if(child.userData.flowBaseX!==undefined){child.position.x=child.userData.flowBaseX+Math.sin(envClock.time*1.4+child.userData.flowOffset)*.35;child.position.z=child.userData.flowBaseZ+Math.cos(envClock.time*1.1+child.userData.flowOffset)*.45;}});
+ for(const veil of animatedVeils)veil.position.y=4.7+Math.sin(envClock.time*3+veil.position.x)*.08;
+ for(const puff of animatedMist){puff.position.y=.3+Math.abs(Math.sin(envClock.time*.7+puff.userData.phase))*1.6;puff.position.x=puff.userData.baseX+Math.sin(envClock.time*.35+puff.userData.phase)*.3;}
+ for(const foam of flowingFoam){foam.position.x=foam.userData.flowBaseX+Math.sin(envClock.time*1.4+foam.userData.flowOffset)*.35;foam.position.z=foam.userData.flowBaseZ+Math.cos(envClock.time*1.1+foam.userData.flowOffset)*.45;}
  const mp=moteGeo.attributes.position;for(let i=0;i<moteCount;i++){const phase=motePhases[i];mp.setX(i,motePositions[i*3]+Math.sin(envClock.time*.35+phase)*.18);mp.setY(i,motePositions[i*3+1]+Math.sin(envClock.time*.7+phase)*.24);mp.setZ(i,motePositions[i*3+2]+Math.cos(envClock.time*.28+phase)*.16);}mp.needsUpdate=true;
  if(!paused){movePlayer(dt);updateEnemies(dt,now);if(fireHeld||fireTap)shoot();fireTap=false;}
  renderer.render(scene,camera);
