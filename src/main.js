@@ -143,6 +143,9 @@ function forestPlacement(kind,random){
   const x=side*(kind==='tree'?10+random()*22:kind==='sapling'?6.5+random()*23:
    ['fern','grass','moss'].includes(kind)?4.1+random()*15:6+random()*22);
   if(Math.abs(x-trailXAt(z))<(kind==='tree'?7.5:3.7))continue;
+  const streamT=THREE.MathUtils.clamp((z+34)/91,0,1);
+  const streamX=forestStream.getPointAt(streamT).x;
+  if(x>0&&Math.abs(x-streamX)<(kind==='tree'?3.2:1.8))continue;
   if(kind!=='tree'&&Math.abs(z-28)<5&&Math.abs(x)<8)continue;
   return{x,z};
  }
@@ -294,7 +297,7 @@ function updateEnemies(dt,now){
  updateHud();
 }
 function startSlide(){
- if(paused||player.sliding||player.slideCooldown>0||player.pos.y>1.72)return;
+ if(paused||player.sliding||player.slideCooldown>0||player.pos.y>forestTerrainHeight(player.pos.x,player.pos.z)+1.72)return;
  const forward=(keys.has('KeyW')?1:0)-(keys.has('KeyS')?1:0)+move.y;
  const side=(keys.has('KeyD')?1:0)-(keys.has('KeyA')?1:0)+move.x;
  const moving=Math.abs(forward)+Math.abs(side)>.2;
