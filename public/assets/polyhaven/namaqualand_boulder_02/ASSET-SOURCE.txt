@@ -1,0 +1,5 @@
+Poly Haven asset: namaqualand_boulder_02
+Collection: Namaqualand
+License: CC0
+Source: https://polyhaven.com/a/namaqualand_boulder_02
+Downloaded by scripts/vendor-polyhaven-assets.mjs

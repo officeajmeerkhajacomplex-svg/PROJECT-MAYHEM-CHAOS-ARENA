@@ -1,0 +1,5 @@
+Poly Haven asset: dead_quiver_branch_01
+Collection: Namaqualand
+License: CC0
+Source: https://polyhaven.com/a/dead_quiver_branch_01
+Downloaded by scripts/vendor-polyhaven-assets.mjs

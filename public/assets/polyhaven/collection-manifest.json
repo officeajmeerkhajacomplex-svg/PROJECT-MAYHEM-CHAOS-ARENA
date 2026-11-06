@@ -1,0 +1,585 @@
+{
+  "collection": "namaqualand",
+  "source": "https://polyhaven.com/collections/namaqualand",
+  "license": "CC0",
+  "modelCount": 30,
+  "models": [
+    {
+      "id": "bark_debris_01",
+      "name": "Bark Debris 01",
+      "description": "Free 16K model of photoreal bark debris. Weathered Karoo sticks with cracked, dry surfaces - ideal for desert ground cover and dead-tree scenes (Namaqualand).",
+      "category": "Nature/Logs, Branches & Roots/Deadwood & Debris",
+      "tags": [
+        "karoo",
+        "desert",
+        "dry",
+        "dead tree",
+        "stick"
+      ],
+      "resolution": "1k",
+      "dependencies": 4,
+      "bytes": 8067781
+    },
+    {
+      "id": "cheiridopsis_succulent",
+      "name": "Cheiridopsis Succulent",
+      "description": "Free 8K Cheiridopsis model: tiny Karoo groundcover with fleshy blue-green leaves, quartz-strewn base and delicate pale-pink flowers - ideal for desert scenes.",
+      "category": "Nature/Plants/Succulents & Cacti",
+      "tags": [
+        "karoo",
+        "desert",
+        "south africa",
+        "succulent",
+        "quartz",
+        "tiny",
+        "aloe",
+        "cactus",
+        "flower"
+      ],
+      "resolution": "1k",
+      "dependencies": 4,
+      "bytes": 4261470
+    },
+    {
+      "id": "crystalline_iceplant",
+      "name": "Crystalline Iceplant",
+      "description": "Free 8K Crystalline Iceplant model - a small South African succulent groundcover with realistic leaves, botanical Karoo detail and low, rosette foliage.",
+      "category": "Nature/Plants/Succulents & Cacti",
+      "tags": [
+        "leaf",
+        "small",
+        "succulent",
+        "foliage",
+        "leaves",
+        "karoo",
+        "botanical",
+        "south africa"
+      ],
+      "resolution": "1k",
+      "dependencies": 4,
+      "bytes": 2612984
+    },
+    {
+      "id": "dead_quiver_branch_01",
+      "name": "Dead Quiver Branch 01",
+      "description": "Free 8K 3D model of a dried quiver branch from the Namaqualand Karoo, with weathered bark and desert-worn detail - ideal as ground cover, botanical debris or desert props.",
+      "category": "Nature/Logs, Branches & Roots/Branches & Twigs",
+      "tags": [
+        "karoo",
+        "south africa",
+        "desert",
+        "botanical",
+        "dried",
+        "stick",
+        "debris"
+      ],
+      "resolution": "1k",
+      "dependencies": 4,
+      "bytes": 2705203
+    },
+    {
+      "id": "dead_quiver_branch_02",
+      "name": "Dead Quiver Branch 02",
+      "description": "Free 8K Dead Quiver Branch 02 model - Namaqualand, Karoo-worn, decayed dried log with cracked bark and weathered texture, perfect desert groundcover debris.",
+      "category": "Nature/Logs, Branches & Roots/Branches & Twigs",
+      "tags": [
+        "south africa",
+        "karoo",
+        "dry",
+        "debris",
+        "log",
+        "decayed",
+        "dried",
+        "stick",
+        "desert"
+      ],
+      "resolution": "1k",
+      "dependencies": 4,
+      "bytes": 2209401
+    },
+    {
+      "id": "dead_quiver_trunk",
+      "name": "Dead Quiver Trunk",
+      "description": "Free 8K model of a dried, decayed quiver-tree trunk from South Africa's Karoo, with weathered bark, knotted stump and debris, ideal for arid nature scenes.",
+      "category": "Nature/Logs, Branches & Roots/Fallen Logs & Stumps",
+      "tags": [
+        "karoo",
+        "south africa",
+        "dry",
+        "dried",
+        "dead",
+        "decayed",
+        "debris",
+        "log",
+        "stump",
+        "dead tree"
+      ],
+      "resolution": "1k",
+      "dependencies": 4,
+      "bytes": 2270389
+    },
+    {
+      "id": "didelta_spinosa",
+      "name": "Didelta Spinosa",
+      "description": "Free 8K Didelta spinosa model - realistic Namaqualand desert shrub with twisted stems, dense green leaves and yellow flowers.",
+      "category": "Nature/Plants/Shrubs & Bushes",
+      "tags": [
+        "green",
+        "dessert",
+        "shrub",
+        "leaves",
+        "nature",
+        "botany",
+        "natural",
+        "bush",
+        "foliage",
+        "leaf",
+        "flower"
+      ],
+      "resolution": "1k",
+      "dependencies": 4,
+      "bytes": 14772565
+    },
+    {
+      "id": "dry_quiver_leaf",
+      "name": "Dry Quiver Leaf",
+      "description": "Free 8K model of a dried quiver leaf from Namaqualand - realistic desert debris with curled fibrous texture and brittle edges for ground-cover scenes.",
+      "category": "Nature/Logs, Branches & Roots/Deadwood & Debris",
+      "tags": [
+        "karoo",
+        "desert",
+        "south africa",
+        "dry",
+        "dried",
+        "dead",
+        "debris"
+      ],
+      "resolution": "1k",
+      "dependencies": 4,
+      "bytes": 4488942
+    },
+    {
+      "id": "flower_empodium",
+      "name": "Flower Empodium",
+      "description": "Free 4K model of Empodium wildflower - realistic yellow Namaqualand groundcover with detailed textures and multiple growth variations.",
+      "category": "Nature/Plants/Wildflowers",
+      "tags": [
+        "karoo",
+        "field",
+        "yellow",
+        "floral",
+        "wildflower",
+        "south africa"
+      ],
+      "resolution": "1k",
+      "dependencies": 4,
+      "bytes": 898227
+    },
+    {
+      "id": "flower_gazania",
+      "name": "Flower Gazania",
+      "description": "Free 8K model: realistic Gazania wildflower clumps from Namaqualand - orange daisy-like groundcover with botanical detail, ideal for fields.",
+      "category": "Nature/Plants/Wildflowers",
+      "tags": [
+        "karoo",
+        "outdoor",
+        "field",
+        "orange",
+        "botanical",
+        "floral",
+        "african",
+        "wildflower",
+        "daisy",
+        "south africa"
+      ],
+      "resolution": "1k",
+      "dependencies": 4,
+      "bytes": 2848844
+    },
+    {
+      "id": "flower_heliophila",
+      "name": "Flower Heliophila",
+      "description": "Free 8K model of Heliophila: tiny white Namaqualand wildflower groundcover from South Africa, delicate stems and realistic botanical detail for desert scenes.",
+      "category": "Nature/Plants/Wildflowers",
+      "tags": [
+        "plant",
+        "natural",
+        "botany",
+        "tiny",
+        "small",
+        "karoo",
+        "desert",
+        "south africa",
+        "white",
+        "wildflower",
+        "floral"
+      ],
+      "resolution": "1k",
+      "dependencies": 4,
+      "bytes": 3849137
+    },
+    {
+      "id": "flower_stinkkruid",
+      "name": "Flower Stinkkruid",
+      "description": "Free 4K Flower Stinkkruid model - a detailed Namaqualand wildflower with grey-green leaves, thin stems and yellow button blooms.",
+      "category": "Nature/Plants/Wildflowers",
+      "tags": [
+        "karoo",
+        "field",
+        "yellow",
+        "botanical",
+        "botany",
+        "floral",
+        "south africa",
+        "wildflower"
+      ],
+      "resolution": "1k",
+      "dependencies": 4,
+      "bytes": 4781035
+    },
+    {
+      "id": "flower_ursinia",
+      "name": "Flower Ursinia",
+      "description": "Free 4K model of Namaqualand ursinia - low, sprawling orange wildflower from South Africa’s Karoo; botanical detail, perfect groundcover for desert scenes.",
+      "category": "Nature/Plants/Wildflowers",
+      "tags": [
+        "karoo",
+        "south africa",
+        "desert",
+        "wildflower",
+        "botanical",
+        "orange"
+      ],
+      "resolution": "1k",
+      "dependencies": 4,
+      "bytes": 2095182
+    },
+    {
+      "id": "leipoldtia_schultzei",
+      "name": "Leipoldtia Schultzei",
+      "description": "Free 8K model of Leipoldtia schultzei - low, spreading purple-succulent wildflower from Namaqualand with detailed leaves, stems and vibrant blooms.",
+      "category": "Nature/Plants/Succulents & Cacti",
+      "tags": [
+        "succulent",
+        "wildflower",
+        "flower",
+        "floral",
+        "african",
+        "purple",
+        "plant",
+        "flora",
+        "nature"
+      ],
+      "resolution": "1k",
+      "dependencies": 4,
+      "bytes": 13101968
+    },
+    {
+      "id": "namaqualand_boulder_02",
+      "name": "Namaqualand Boulder 02",
+      "description": "Free 8K model of Namaqualand boulders - realistic Karoo sandstone rocks with layered, weathered surfaces, perfect for desert, geological, and landscaping scenes.",
+      "category": "Nature/Rocks & Stone/Desert Boulders",
+      "tags": [
+        "karoo",
+        "desert",
+        "south africa",
+        "boulders",
+        "rocks",
+        "geological",
+        "rock",
+        "landscaping"
+      ],
+      "resolution": "1k",
+      "dependencies": 4,
+      "bytes": 5139304
+    },
+    {
+      "id": "namaqualand_boulder_03",
+      "name": "Namaqualand Boulder 03",
+      "description": "Free 8K model: rough brown boulder from the Karoo, detailed geological rock with weathered facets - perfect for desert scenes and landscaping.",
+      "category": "Nature/Rocks & Stone/Desert Boulders",
+      "tags": [
+        "karoo",
+        "south africa",
+        "desert",
+        "boulder",
+        "rock",
+        "rough",
+        "brown",
+        "geological",
+        "landscaping",
+        "stone"
+      ],
+      "resolution": "1k",
+      "dependencies": 4,
+      "bytes": 3778955
+    },
+    {
+      "id": "namaqualand_boulder_04",
+      "name": "Namaqualand Boulder 04",
+      "description": "Free 8K Namaqualand boulder model - rugged Karoo rock from South Africa with brown, weathered surfaces and lichen patches for landscaping.",
+      "category": "Nature/Rocks & Stone/Desert Boulders",
+      "tags": [
+        "karoo",
+        "south africa",
+        "desert",
+        "boulder",
+        "rock",
+        "brown",
+        "geological",
+        "landscaping"
+      ],
+      "resolution": "1k",
+      "dependencies": 4,
+      "bytes": 3715812
+    },
+    {
+      "id": "namaqualand_boulder_05",
+      "name": "Namaqualand Boulder 05",
+      "description": "Free 8K model of a weathered Namaqualand boulder - dry Karoo sandstone with layered, eroded surface and warm desert tones, perfect for natural rock scenes.",
+      "category": "Nature/Rocks & Stone/Desert Boulders",
+      "tags": [
+        "karoo",
+        "desert",
+        "dry",
+        "south africa",
+        "rock",
+        "rocks",
+        "formation",
+        "geological",
+        "boulder"
+      ],
+      "resolution": "1k",
+      "dependencies": 4,
+      "bytes": 4699992
+    },
+    {
+      "id": "namaqualand_boulder_06",
+      "name": "Namaqualand Boulder 06",
+      "description": "Free 8K model, rugged brown Namaqualand boulder from the Karoo with a rough geological surface - perfect for desert scenes.",
+      "category": "Nature/Rocks & Stone/Desert Boulders",
+      "tags": [
+        "karoo",
+        "south africa",
+        "desert",
+        "boulder",
+        "rock",
+        "brown",
+        "geological",
+        "landscaping",
+        "rough"
+      ],
+      "resolution": "1k",
+      "dependencies": 4,
+      "bytes": 5252430
+    },
+    {
+      "id": "namaqualand_boulders_01",
+      "name": "Namaqualand Boulders 01",
+      "description": "Free 8K model of rugged Namaqualand boulders from South Africa's Karoo - brown, rough geological rocks for realistic desert landscaping and nature scenes.",
+      "category": "Nature/Rocks & Stone/Desert Boulders",
+      "tags": [
+        "south africa",
+        "karoo",
+        "desert",
+        "boulder",
+        "rock",
+        "brown",
+        "geological",
+        "landscaping",
+        "rough"
+      ],
+      "resolution": "1k",
+      "dependencies": 4,
+      "bytes": 3640608
+    },
+    {
+      "id": "namaqualand_cliff_01",
+      "name": "Namaqualand Cliff 01",
+      "description": "Free 8K model of a Namaqualand cliff: weathered Karoo boulders, eroded rock faces and cracks with desert tones - high-detail, natural cliffside asset.",
+      "category": "Nature/Rocks & Stone/Cliffs & Rock Faces",
+      "tags": [
+        "south africa",
+        "karoo",
+        "desert",
+        "boulders",
+        "rock",
+        "rock formation",
+        "cliff side",
+        "cliff",
+        "eroded cliffs",
+        "nature scene",
+        "rock face",
+        "rock wall"
+      ],
+      "resolution": "1k",
+      "dependencies": 4,
+      "bytes": 4544360
+    },
+    {
+      "id": "namaqualand_cliff_02",
+      "name": "Namaqualand Cliff 02",
+      "description": "Free 8K model of a weathered cliff: stacked boulders, eroded rock face, cracked slabs, warm brown tones and lichen-dotted surfaces.",
+      "category": "Nature/Rocks & Stone/Cliffs & Rock Faces",
+      "tags": [
+        "karoo",
+        "south africa",
+        "desert",
+        "boulders",
+        "rock face",
+        "rock",
+        "cliff side",
+        "cliff",
+        "eroded cliff",
+        "rock wall",
+        "weathered rock",
+        "rock outcrop",
+        "rock formation",
+        "boulder",
+        "boulder formation"
+      ],
+      "resolution": "1k",
+      "dependencies": 4,
+      "bytes": 8378923
+    },
+    {
+      "id": "namaqualand_rocks_01",
+      "name": "Namaqualand Rocks 01",
+      "description": "Free 8K model of quartz-rich Namaqualand rocks (Karoo, South Africa). Realistic desert stones with high-detail geological texture for nature and landscape scenes.",
+      "category": "Nature/Rocks & Stone/Stone Sets",
+      "tags": [
+        "karoo",
+        "south africa",
+        "quartz",
+        "desert",
+        "geological",
+        "stones",
+        "rocks"
+      ],
+      "resolution": "1k",
+      "dependencies": 4,
+      "bytes": 4802955
+    },
+    {
+      "id": "namaqualand_stones_01",
+      "name": "Namaqualand Stones 01",
+      "description": "Free 8K model of weathered Namaqualand quartz stones, varied Karoo desert rocks from South Africa, realistic, high-detail assets for nature and geological scenes.",
+      "category": "Nature/Rocks & Stone/Stone Sets",
+      "tags": [
+        "karoo",
+        "south africa",
+        "quartz",
+        "desert",
+        "geological",
+        "mineral",
+        "stones",
+        "rocks"
+      ],
+      "resolution": "1k",
+      "dependencies": 4,
+      "bytes": 4154858
+    },
+    {
+      "id": "othonna_cerarioides",
+      "name": "Othonna Cerarioides",
+      "description": "Free 8K model of Othonna Cerarioides - a realistic Karoo succulent shrub with dense upright stems, leathery green leaves and fine botanical detail.",
+      "category": "Nature/Plants/Succulents & Cacti",
+      "tags": [
+        "karoo",
+        "south africa",
+        "succulent",
+        "bush",
+        "shrub",
+        "botany",
+        "green",
+        "leaf"
+      ],
+      "resolution": "1k",
+      "dependencies": 4,
+      "bytes": 7879771
+    },
+    {
+      "id": "quiver_tree_01",
+      "name": "Quiver Tree 01",
+      "description": "Free 8K Quiver Tree 3D model, photoreal: detailed trunk bark and aloe-like succulent rosettes, ideal for desert scenes.",
+      "category": "Nature/Trees/Desert Trees",
+      "tags": [
+        "karoo",
+        "south africa",
+        "desert",
+        "succulent",
+        "aloe"
+      ],
+      "resolution": "1k",
+      "dependencies": 7,
+      "bytes": 8880481
+    },
+    {
+      "id": "quiver_tree_02",
+      "name": "Quiver Tree 02",
+      "description": "Free 8K model of a realistic Quiver Tree: weathered, sculpted trunk and dense rosette of long aloe-like succulent leaves with natural color variation.",
+      "category": "Nature/Trees/Desert Trees",
+      "tags": [
+        "south africa",
+        "karoo",
+        "succulent",
+        "aloe"
+      ],
+      "resolution": "1k",
+      "dependencies": 4,
+      "bytes": 4547871
+    },
+    {
+      "id": "searsia_burchellii",
+      "name": "Searsia Burchellii",
+      "description": "Free 8K model of Searsia burchellii - a sprawling dry Karoo shrub with tangled branches and dense small leaves.",
+      "category": "Nature/Plants/Shrubs & Bushes",
+      "tags": [
+        "karoo",
+        "bush",
+        "shrub",
+        "large",
+        "dry",
+        "south africa"
+      ],
+      "resolution": "1k",
+      "dependencies": 4,
+      "bytes": 34610829
+    },
+    {
+      "id": "searsia_lucida",
+      "name": "Searsia Lucida",
+      "description": "Free 8K Searsia lucida model: realistic Karoo shrub with twiggy branches and dense leathery leaves - perfect for dry, desert and arid scenes.",
+      "category": "Nature/Plants/Shrubs & Bushes",
+      "tags": [
+        "karoo",
+        "bush",
+        "shrub",
+        "dry",
+        "stick",
+        "botany",
+        "south africa"
+      ],
+      "resolution": "1k",
+      "dependencies": 4,
+      "bytes": 19816833
+    },
+    {
+      "id": "wild_rooibos_bush",
+      "name": "Wild Rooibos Bush",
+      "description": "Free 8K model of a dried wild rooibos shrub from South Africa's Karoo/Namaqualand - low, multi-stemmed desert bush with needle-like leaves, perfect for arid scenes.",
+      "category": "Nature/Plants/Desert & Arid Plants",
+      "tags": [
+        "karoo",
+        "south africa",
+        "desert",
+        "dried",
+        "dry",
+        "shrub"
+      ],
+      "resolution": "1k",
+      "dependencies": 4,
+      "bytes": 2464496
+    }
+  ]
+}
