@@ -268,7 +268,7 @@ async function loadPolyHavenAsset(assetId, placements, targetHeight) {
     for (const placement of placements) {
       const instance = prototype.clone(true);
       instance.scale.setScalar(scale * (placement.scale || 1));
-      instance.position.set(placement.x, -bounds.min.y * scale, placement.z);
+      instance.position.set(placement.x, -bounds.min.y * scale * (placement.scale || 1), placement.z);
       instance.rotation.y = placement.rotation || 0;
       instance.traverse((node) => {
         if (node.isMesh) { node.castShadow = !isTouch; node.receiveShadow = true; }
