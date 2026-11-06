@@ -56,11 +56,11 @@ for (const entry of await readdir(root, { withFileTypes: true })) {
   if (entry.name !== 'model.glb') await rm(path.join(root, entry.name), { recursive: true, force: true });
 }
 await writeFile(path.join(root, 'ASSET-SOURCE.txt'),
-  'Poly Haven asset: Bolt Action Rifle 7.62\\nAuthor: Mateusz Sadek\\nLicense: CC0\\nSource: https://polyhaven.com/a/bolt_action_rifle_7_62\\nOptimized as self-contained Meshopt GLB with WebP textures.\\n');
+  ['Poly Haven asset: Bolt Action Rifle 7.62','Author: Mateusz Sadek','License: CC0','Source: https://polyhaven.com/a/bolt_action_rifle_7_62','Optimized as self-contained Meshopt GLB with WebP textures.'].join(String.fromCharCode(10)));
 await writeFile(path.join(root, 'manifest.json'), JSON.stringify({
   id, name: 'Bolt Action Rifle 7.62', author: 'Mateusz Sadek',
   source: 'https://polyhaven.com/a/bolt_action_rifle_7_62',
   license: 'CC0', resolution, format: 'GLB / Meshopt / WebP',
   sourceDependencyCount: dependencies, bytes
-}, null, 2) + '\\n');
+}, null, 2) + String.fromCharCode(10));
 console.log(`Vendored Poly Haven Bolt Action Rifle 7.62: ${(bytes / 1024 / 1024).toFixed(2)} MiB (${resolution})`);
