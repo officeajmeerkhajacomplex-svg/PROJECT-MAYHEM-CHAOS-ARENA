@@ -121,17 +121,24 @@ function addTree(x,z,scale=1,variant=0){
   mossPatch.scale.set(1,.22,.8);
   return g;
 }
+const fernGeometry=(()=>{
+ const positions=[],indices=[];
+ for(let f=0;f<8;f++){
+  const a=f*Math.PI*2/8,dx=Math.cos(a),dz=Math.sin(a);
+  const base=[0,.08,0],tip=[dx*.82,1.08,dz*.82];
+  const mid=[dx*.48,.68,dz*.48],sideX=-dz*.18,sideZ=dx*.18;
+  const left=[mid[0]+sideX,.57,mid[2]+sideZ],right=[mid[0]-sideX,.57,mid[2]-sideZ];
+  const offset=positions.length/3;
+  positions.push(...base,...left,...mid,...right,...tip);
+  indices.push(offset,offset+1,offset+2,offset+2,offset+3,offset+4);
+ }
+ const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));geo.setIndex(indices);geo.computeVertexNormals();return geo;
+})();
 function addFern(x,z,scale=1,flower=false){
-  const g=new THREE.Group();g.position.set(x,.02,z);g.scale.setScalar(scale);environment.add(g);
-  for(let f=0;f<7;f++){
-    const a=f*Math.PI*2/7;
-    const stem=addMesh(new THREE.CylinderGeometry(.018,.035,1.05,5),envMaterials.fern,Math.cos(a)*.28,.48,Math.sin(a)*.28,g,false);
-    stem.rotation.z=Math.cos(a)*.72;stem.rotation.x=Math.sin(a)*.72;
-    const leaf=addMesh(new THREE.ConeGeometry(.18,.72,5),f%3===0?envMaterials.leafLight:envMaterials.fern,Math.cos(a)*.48,.73,Math.sin(a)*.48,g,false);
-    leaf.rotation.z=Math.cos(a)*-.85;leaf.rotation.x=Math.sin(a)*.85;
-  }
-  if(flower){const bloom=addMesh(new THREE.SphereGeometry(.12,7,6),Math.random()>.5?envMaterials.flowerA:envMaterials.flowerB,0,.98,0,g,false);bloom.scale.set(1,.7,1);}
-  return g;
+ const fern=addMesh(fernGeometry,envMaterials.fern,x,.02,z,environment,false);
+ fern.scale.setScalar(scale);fern.rotation.y=Math.random()*Math.PI*2;
+ if(flower){const bloom=addMesh(new THREE.SphereGeometry(.12,7,6),Math.random()>.5?envMaterials.flowerA:envMaterials.flowerB,x,.98*scale,z,environment,false);bloom.scale.set(1,.7,1);}
+ return fern;
 }
 function addRuinColumn(x,z,h=4){
   const g=new THREE.Group();g.position.set(x,0,z);environment.add(g);
@@ -223,17 +230,17 @@ addRock(0,-.4,-.3,7,2.2,3.2,mats.stone).position.x=25;
 for(let i=0;i<12;i++){const splash=addMesh(new THREE.SphereGeometry(.22+Math.random()*.35,7,5),envMaterials.waterFoam,24+(Math.random()-.5)*5,.1+Math.random()*2,9+(Math.random()-.5)*3,environment,false);splash.userData.mist=true;splash.userData.phase=Math.random()*6.28;splash.userData.baseX=splash.position.x;animatedMist.push(splash);}
 // Dense canopy perimeter, mid-height palms, understory ferns and flowering ground cover.
 const trees=[];
-for(let i=0;i<76;i++){
+for(let i=0;i<(isTouch?42:68);i++){
   const angle=Math.random()*Math.PI*2,r=22+Math.random()*28,x=Math.cos(angle)*r,z=8+Math.sin(angle)*r*1.18;
   if(Math.abs(x)<6&&z<35&&z>-15)continue;
   trees.push(addTree(x,z,.78+Math.random()*.75,i));
 }
-for(let i=0;i<170;i++){
+for(let i=0;i<(isTouch?65:125);i++){
   const x=(Math.random()-.5)*58,z=-29+Math.random()*70;
   if(Math.abs(x)<5&&z<34&&z>-15)continue;
   addFern(x,z,.55+Math.random()*.85,Math.random()>.86);
 }
-for(let i=0;i<35;i++){
+for(let i=0;i<(isTouch?15:26);i++){
   const x=(Math.random()-.5)*54,z=-24+Math.random()*64;
   const palm=new THREE.Group();palm.position.set(x,0,z);palm.rotation.y=Math.random()*6.28;environment.add(palm);
   addMesh(new THREE.CylinderGeometry(.12,.22,5.5,7),mats.bark,0,2.7,0,palm).rotation.z=.12;
