@@ -104,10 +104,10 @@ async function loadPineForestCollection() {
         const height = Math.max(size.x, size.y, size.z);
         if (!height || !Number.isFinite(height)) throw new Error('Invalid model dimensions');
         const text = `${entry.id} ${entry.name || ''} ${entry.category || ''} ${(entry.tags || []).join(' ')}`.toLowerCase();
-        const kind = /tree|pine|conifer|spruce|fir/.test(text) ? 'tree'
+        const kind = /sapling|fern|grass|moss|flower|shrub|bush|plant|vegetation/.test(text) ? 'understory'
           : /rock|boulder|stone/.test(text) ? 'rock'
-          : /fern|grass|moss|flower|shrub|bush|plant|vegetation/.test(text) ? 'understory'
-          : /log|stump|wood|branch/.test(text) ? 'wood' : 'prop';
+          : /log|stump|wood|branch|root/.test(text) ? 'wood'
+          : /tree|conifer|spruce|fir|pine_tree/.test(text) ? 'tree' : 'prop';
         models.push({ entry, prototype, bounds, height, kind });
       } catch (error) {
         console.error(`Pine Forest model failed to load: ${entry.id}`, error);
