@@ -78,6 +78,15 @@ The current browser build has a first-person combat prototype and a Pine Forest 
 
 Not yet implemented: the full campaign and regions, mission/checkpoint system, local progression saves, armour, complete enemy state machine, gadgets, final art/models/animations, audio, boss phases, controller support, adjustable settings, and comprehensive offline/device validation.
 
+## Verified asset pipeline and next source packs
+
+- **Poly Haven Pine Forest (imported):** 16 CC0 models, optimized into self-contained Meshopt/WebP GLBs; 84.37 MiB total. All 16 files are committed under `public/assets/polyhaven`, and the vendor workflow completed successfully.
+- **ambientCG (planned):** CC0 PBR material maps for terrain, concrete, metal, wood, and facility surfaces. Download and bundle selected maps locally; do not fetch textures from a live API during gameplay.
+- **Kenney Nature Kit / modular kits (planned):** individual asset-pack pages identify CC0 terms. Use the Nature Kit for stylized secondary foliage/props and suitable modular kits for outposts or factory props after validating each download's included license and GLTF export.
+- **Sketchfab (curated only):** the supplied source link is a search/tag page, not a license grant. Import only individual models whose downloadable license explicitly permits the intended game use; preserve creator/license metadata.
+
+The current Pine Forest loader uses three concurrent GLB loads, type-aware placement, and a clear central combat lane. The service worker caches successfully fetched same-origin assets for later offline sessions. The first complete asset download still requires a connection and sufficient browser storage. The browser build workflow now checks that the production Vite bundle compiles after each push.
+
 ## Quality gate
 
 A feature is not complete solely because it runs. Verify responsive configurable controls, distinct weapons, readable enemy reactions, clear objectives, useful navigation, combat feedback, mobile layout across aspect ratios, stable performance on real target hardware, complete offline play, and persistent local progress.
