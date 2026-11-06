@@ -240,7 +240,9 @@ camera.position.copy(player.pos);
 scene.add(camera);
 const weaponRig=new THREE.Group();weaponRig.position.set(.30,-.27,-.68);camera.add(weaponRig);
 const riflePivot=new THREE.Group();weaponRig.add(riflePivot);
+const smgPivot=new THREE.Group();smgPivot.visible=false;weaponRig.add(smgPivot);
 const weaponAnim={kick:0,pitch:0,muzzle:0,reloadElapsed:0,boltCycle:1};
+let smgMixer=null,smgActions={};
 let rifleBolt=null,rifleBoltBase=null;
 const sleeveMaterial=new THREE.MeshStandardMaterial({color:0x344b3b,roughness:.92});
 const gloveMaterial=new THREE.MeshStandardMaterial({color:0x92775a,roughness:.88});
@@ -263,6 +265,46 @@ const muzzleFlash=new THREE.Group();muzzleFlash.visible=false;riflePivot.add(muz
 const flashCore=new THREE.Mesh(new THREE.SphereGeometry(.045,8,8),new THREE.MeshBasicMaterial({color:0xffe4a0}));flashCore.scale.set(.8,.8,1.8);muzzleFlash.add(flashCore);
 const flashFlare=new THREE.Mesh(new THREE.ConeGeometry(.035,.16,8),new THREE.MeshBasicMaterial({color:0xff8a32}));flashFlare.rotation.x=-Math.PI/2;flashFlare.position.z=-.075;muzzleFlash.add(flashFlare);
 const muzzleLight=new THREE.PointLight(0xffa04a,0,3);muzzleFlash.add(muzzleLight);muzzleFlash.position.set(0,0,-.49);
+const smgMetal=new THREE.MeshStandardMaterial({color:0x252d31,metalness:.78,roughness:.38});
+const smgPolymer=new THREE.MeshStandardMaterial({color:0x202a27,metalness:.12,roughness:.82});
+const smgAccent=new THREE.MeshStandardMaterial({color:0x69736b,metalness:.65,roughness:.42});
+function smgPart(parent,geometry,material,position,rotation=[0,0,0]){
+ const mesh=new THREE.Mesh(geometry,material);mesh.position.set(...position);mesh.rotation.set(...rotation);mesh.castShadow=false;mesh.receiveShadow=false;parent.add(mesh);return mesh;
+}
+smgPart(smgPivot,new THREE.BoxGeometry(.19,.17,.43),smgMetal,[0,.005,-.055]);
+smgPart(smgPivot,new THREE.BoxGeometry(.16,.12,.24),smgPolymer,[0,-.015,-.34]);
+smgPart(smgPivot,new THREE.CylinderGeometry(.027,.027,.35,10),smgMetal,[0,.015,-.61],[Math.PI/2,0,0]);
+smgPart(smgPivot,new THREE.CylinderGeometry(.043,.043,.08,10),smgAccent,[0,.015,-.81],[Math.PI/2,0,0]);
+smgPart(smgPivot,new THREE.BoxGeometry(.115,.23,.12),smgPolymer,[0,-.19,-.045],[.12,0,0]);
+smgPart(smgPivot,new THREE.BoxGeometry(.12,.19,.105),smgPolymer,[0,-.16,.12],[.18,0,0]);
+smgPart(smgPivot,new THREE.BoxGeometry(.16,.075,.25),smgPolymer,[0,.025,.28]);
+smgPart(smgPivot,new THREE.BoxGeometry(.13,.035,.14),smgMetal,[0,.105,-.06]);
+smgPart(smgPivot,new THREE.BoxGeometry(.07,.04,.14),smgAccent,[0,.14,-.06]);
+const smgMuzzleFlash=new THREE.Group();smgPivot.add(smgMuzzleFlash);smgMuzzleFlash.position.set(0,.015,-.84);
+const smgFlashCore=new THREE.Mesh(new THREE.SphereGeometry(.04,8,8),new THREE.MeshBasicMaterial({color:0xffe4a0}));smgFlashCore.scale.set(.8,.8,1.8);smgMuzzleFlash.add(smgFlashCore);
+const smgFlashFlare=new THREE.Mesh(new THREE.ConeGeometry(.035,.15,8),new THREE.MeshBasicMaterial({color:0xff8a32}));smgFlashFlare.rotation.x=-Math.PI/2;smgFlashFlare.position.z=-.075;smgMuzzleFlash.add(smgFlashFlare);
+const smgMuzzleLight=new THREE.PointLight(0xffa04a,0,3);smgMuzzleFlash.add(smgMuzzleLight);smgMuzzleFlash.visible=false;
+const smgLoader=new GLTFLoader();smgLoader.setMeshoptDecoder(MeshoptDecoder);
+smgLoader.load('/assets/weapons/fps_animated_smg/model.glb',gltf=>{
+ const modelRoot=new THREE.Group();modelRoot.add(gltf.scene);modelRoot.updateMatrixWorld(true);
+ const bounds=new THREE.Box3().setFromObject(modelRoot),size=bounds.getSize(new THREE.Vector3()),center=bounds.getCenter(new THREE.Vector3());
+ const longest=Math.max(size.x,size.y,size.z);
+ if(!longest)throw new Error('Downloaded SMG model has empty geometry');
+ gltf.scene.position.sub(center);gltf.scene.scale.setScalar(.88/longest);
+ smgPivot.add(modelRoot);smgPivot.userData.authoredModel=modelRoot;
+ if(gltf.animations?.length){
+  smgMixer=new THREE.AnimationMixer(modelRoot);
+  for(const clip of gltf.animations)smgActions[clip.name.toLowerCase()]=smgMixer.clipAction(clip);
+  console.info('SMG animation clips:',gltf.animations.map(c=>c.name));
+ }
+ smgPivot.children.filter(child=>child!==modelRoot&&child!==smgMuzzleFlash).forEach(child=>child.visible=false);
+ console.info('Sketchfab fps animated smg loaded');
+},undefined,error=>console.info('SMG uses the built-in placeholder until its authorized GLB is added:',error.message));
+function playSmgAnimation(kind){
+ if(!smgMixer)return;
+ const keys=Object.keys(smgActions),match=keys.find(key=>kind==='fire'?/fire|shoot|shot/.test(key):/reload/.test(key));
+ if(match){for(const action of Object.values(smgActions))action.stop();const action=smgActions[match];action.reset();action.setLoop(THREE.LoopOnce,1);action.clampWhenFinished=true;action.play();}
+}
 const rifleLoader=new GLTFLoader();rifleLoader.setMeshoptDecoder(MeshoptDecoder);
 rifleLoader.load('/assets/weapons/bolt_action_rifle_7_62/model.glb',gltf=>{
  const rifle=gltf.scene;rifle.updateMatrixWorld(true);const bounds=new THREE.Box3().setFromObject(rifle);
@@ -275,7 +317,19 @@ rifleLoader.load('/assets/weapons/bolt_action_rifle_7_62/model.glb',gltf=>{
  if(rifleBolt)rifleBoltBase={position:rifleBolt.position.clone(),rotation:rifleBolt.rotation.clone()};
  riflePivot.add(rifle);console.info('Poly Haven Bolt Action Rifle 7.62 viewmodel loaded (CC0)');
 },undefined,error=>console.error('Bolt-action rifle viewmodel failed to load',error));
-const weapon={name:'BOLT ACTION 7.62',desc:'BOLT-ACTION PRECISION RIFLE',capacity:5,mag:5,reserve:40,damage:118,fireInterval:820,baseSpread:.0018,movingSpread:.0045,verticalRecoil:.043,horizontalRecoil:.0022,weaponKick:.105,weaponRise:.082,recoilReturn:8.5};
+const weapons=[
+ {id:'rifle',name:'BOLT ACTION 7.62',desc:'BOLT-ACTION PRECISION RIFLE',capacity:5,mag:5,reserve:40,damage:118,fireInterval:820,baseSpread:.0018,movingSpread:.0045,verticalRecoil:.043,horizontalRecoil:.0022,weaponKick:.105,weaponRise:.082,recoilReturn:8.5,reloadDuration:2.35,automatic:false},
+ {id:'smg',name:'DJM-45 SMG',desc:'COMPACT AUTOMATIC SMG',capacity:30,mag:30,reserve:120,damage:19,fireInterval:92,baseSpread:.009,movingSpread:.009,verticalRecoil:.012,horizontalRecoil:.0045,weaponKick:.035,weaponRise:.022,recoilReturn:13,reloadDuration:1.65,automatic:true}
+];
+let weaponIndex=0,weapon=weapons[weaponIndex];
+function switchWeapon(index){
+ if(index<0||index>=weapons.length||index===weaponIndex||reloading)return;
+ weaponIndex=index;weapon=weapons[weaponIndex];lastShot=0;weaponAnim.kick=0;weaponAnim.pitch=0;weaponAnim.muzzle=0;weaponAnim.boltCycle=1;
+ riflePivot.visible=weapon.id==='rifle';smgPivot.visible=weapon.id==='smg';
+ muzzleFlash.visible=false;smgMuzzleFlash.visible=false;
+ updateHud();toast("EQUIPPED // "+weapon.name);
+}
+function cycleWeapon(){switchWeapon((weaponIndex+1)%weapons.length);}
 let lastShot=0,reloading=false,paused=true,fireHeld=false,fireTap=false;
 let enemies=[],lastFrame=performance.now(),velocityY=0,move={x:0,y:0};
 const raycaster=new THREE.Raycaster();
@@ -308,7 +362,7 @@ function toast(s){$('toast').textContent=s;setTimeout(()=>{$('toast').textConten
 function hitmarker(){const h=$('hitmarker');h.style.opacity=1;setTimeout(()=>h.style.opacity=0,100);}
 function reload(){
  if(reloading||weapon.mag===weapon.capacity||weapon.reserve<=0)return;
- reloading=true;weaponAnim.reloadElapsed=0;weaponAnim.boltCycle=1;toast('RELOADING // WORKING THE BOLT');
+ reloading=true;weaponAnim.reloadElapsed=0;weaponAnim.boltCycle=1;playSmgAnimation('reload');toast(weapon.id==='rifle'?'RELOADING // WORKING THE BOLT':'RELOADING // SMG MAGAZINE');
 }
 function updateWeaponAnimations(dt){
  weaponAnim.kick=Math.max(0,weaponAnim.kick-Math.max(0,weaponAnim.kick)*weapon.recoilReturn*dt);
@@ -317,13 +371,15 @@ function updateWeaponAnimations(dt){
  const bob=(!player.sliding&&moving)?Math.sin(performance.now()*.012)*.008:0;
  let reloadWave=0;
  if(reloading){
-  weaponAnim.reloadElapsed+=dt;const progress=Math.min(1,weaponAnim.reloadElapsed/2.35);reloadWave=Math.sin(progress*Math.PI);
-  if(progress>=1){const amount=Math.min(weapon.capacity-weapon.mag,weapon.reserve);weapon.mag+=amount;weapon.reserve-=amount;reloading=false;toast('RIFLE READY');updateHud();}
+  weaponAnim.reloadElapsed+=dt;const progress=Math.min(1,weaponAnim.reloadElapsed/weapon.reloadDuration);reloadWave=Math.sin(progress*Math.PI);
+  if(progress>=1){const amount=Math.min(weapon.capacity-weapon.mag,weapon.reserve);weapon.mag+=amount;weapon.reserve-=amount;reloading=false;toast(weapon.id==='rifle'?'RIFLE READY':'SMG READY');updateHud();}
  }
  weaponRig.position.set(.30+(moving?Math.sin(performance.now()*.006)*.006:0),-.27+bob-reloadWave*.19,-.68+weaponAnim.kick+reloadWave*.10);
  riflePivot.rotation.x=weaponAnim.pitch+reloadWave*.17;riflePivot.rotation.z=reloadWave*.26;
+ smgPivot.rotation.x=weaponAnim.pitch+reloadWave*.11;smgPivot.rotation.z=reloadWave*.18;
  supportHand.position.set(reloadWave*.20,-reloadWave*.11,reloadWave*.08);triggerHand.position.y=-reloadWave*.045;
- weaponAnim.muzzle=Math.max(0,weaponAnim.muzzle-dt);muzzleFlash.visible=weaponAnim.muzzle>0;muzzleLight.intensity=weaponAnim.muzzle>0?3.2:0;
+ weaponAnim.muzzle=Math.max(0,weaponAnim.muzzle-dt);muzzleFlash.visible=weapon.id==='rifle'&&weaponAnim.muzzle>0;muzzleLight.intensity=muzzleFlash.visible?3.2:0;smgMuzzleFlash.visible=weapon.id==='smg'&&weaponAnim.muzzle>0;smgMuzzleLight.intensity=smgMuzzleFlash.visible?3.2:0;
+ if(smgMixer)smgMixer.update(dt);
  if(rifleBolt&&rifleBoltBase){const cycle=weaponAnim.boltCycle;if(cycle<1){const phase=Math.min(1,cycle/.34);rifleBolt.rotation.x=rifleBoltBase.rotation.x+Math.sin(phase*Math.PI)*.58;rifleBolt.position.z=rifleBoltBase.position.z-Math.sin(phase*Math.PI)*.035;weaponAnim.boltCycle=Math.min(1,cycle+dt);}else{rifleBolt.rotation.copy(rifleBoltBase.rotation);rifleBolt.position.copy(rifleBoltBase.position);}}
 }
 function shoot(){
@@ -335,7 +391,7 @@ function shoot(){
  player.recoilKick=Math.min(.20,player.recoilKick+weapon.verticalRecoil*recoilScale);
  player.yaw+=(Math.random()-.5)*weapon.horizontalRecoil*recoilScale;
  weaponAnim.kick=Math.min(.16,weaponAnim.kick+weapon.weaponKick);weaponAnim.pitch=Math.min(.14,weaponAnim.pitch+weapon.weaponRise);
- weaponAnim.muzzle=.065;weaponAnim.boltCycle=0;updateHud();
+ weaponAnim.muzzle=.055;weaponAnim.boltCycle=weapon.id==='rifle'?0:1;if(weapon.id==='smg')playSmgAnimation('fire');updateHud();
  let didHit=false;const spread=Math.max(.0008,weapon.baseSpread+movementPenalty);
  const dir=new THREE.Vector3((Math.random()-.5)*spread,(Math.random()-.5)*spread,-1).applyEuler(camera.rotation).normalize();
  raycaster.set(camera.position,dir);raycaster.far=125;
@@ -398,7 +454,7 @@ function movePlayer(dt){
  camera.position.set(player.pos.x,player.pos.y-stanceOffset,player.pos.z);camera.rotation.set(THREE.MathUtils.clamp(player.pitch-player.recoilKick,-1.35,1.35),player.yaw,0,'YXZ');
 }
 const keys=new Set();
-addEventListener('keydown',e=>{if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();keys.add(e.code);if(e.code==='KeyR')reload();if(e.code==='KeyC'&&!e.repeat)startSlide();if(e.code==='Space'&&!e.repeat)jumpPlayer();if(e.code==='Escape'&&!paused)pauseGame();});
+addEventListener('keydown',e=>{if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();keys.add(e.code);if(e.code==='KeyR')reload();if((e.code==='Digit1'||e.code==='Digit2')&&!e.repeat)switchWeapon(Number(e.code.slice(5))-1);if(e.code==='KeyQ'&&!e.repeat)cycleWeapon();if(e.code==='KeyC'&&!e.repeat)startSlide();if(e.code==='Space'&&!e.repeat)jumpPlayer();if(e.code==='Escape'&&!paused)pauseGame();});
 addEventListener('keyup',e=>keys.delete(e.code));
 renderer.domElement.addEventListener('click',()=>{if(!isTouch&&!paused)renderer.domElement.requestPointerLock?.();});
 document.addEventListener('mousemove',e=>{if(document.pointerLockElement===renderer.domElement&&!paused){player.yaw-=e.movementX*.002;player.pitch=THREE.MathUtils.clamp(player.pitch-e.movementY*.002,-1.35,1.35);}});
@@ -413,6 +469,7 @@ $('fire').addEventListener('pointerup',()=>fireHeld=false);$('fire').addEventLis
 $('jump').onclick=jumpPlayer;
 $('slide').onclick=startSlide;
 $('reload').onclick=reload;
+$('switch-weapon').onclick=cycleWeapon;
 let stickPointer=null;
 $('stick-zone').addEventListener('pointerdown',e=>{stickPointer=e.pointerId;$('stick-zone').setPointerCapture(stickPointer);updateStick(e);});
 $('stick-zone').addEventListener('pointermove',e=>{if(e.pointerId===stickPointer)updateStick(e);});
@@ -429,7 +486,7 @@ let lastHudUpdate=0;
 function animate(now){
  requestAnimationFrame(animate);const dt=Math.min((now-lastFrame)/1000,.04);lastFrame=now;
   for(const wind of windObjects)wind.object.rotation.z=Math.sin(now*.00045+wind.phase)*wind.strength;
- if(!paused){movePlayer(dt);updateEnemies(dt,now);if(fireHeld||fireTap)shoot();fireTap=false;updateWeaponAnimations(dt);}
+ if(!paused){movePlayer(dt);updateEnemies(dt,now);if(fireTap||(fireHeld&&weapon.automatic))shoot();fireTap=false;updateWeaponAnimations(dt);}
  if(now-lastHudUpdate>=100){updateHud();lastHudUpdate=now;}
 
  renderer.render(scene,camera);
