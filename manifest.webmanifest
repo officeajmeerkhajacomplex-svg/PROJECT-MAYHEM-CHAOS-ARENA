@@ -1,0 +1,12 @@
+{
+  "name": "PROJECT MAYHEM: CHAOS ARENA",
+  "short_name": "MAYHEM",
+  "description": "Offline-first browser FPS prototype.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#071012",
+  "theme_color": "#101a1b",
+  "icons": []
+}
