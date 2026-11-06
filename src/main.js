@@ -213,35 +213,72 @@ for(let i=0;i<(isTouch?65:125);i++){
 // Optional real-world foliage and rock dressing from Poly Haven (CC0).
 // Procedural scenery remains in place as an offline-safe fallback; remote models
 // enhance the scene when the player has a connection.
-const gltfLoader = new GLTFLoader();
 async function loadPolyHavenAsset(assetId, placements, targetHeight) {
   try {
     const response = await fetch(`https://api.polyhaven.com/files/${assetId}`);
     if (!response.ok) throw new Error(`Poly Haven metadata: ${response.status}`);
     const files = await response.json();
-    const modelUrl = files?.gltf?.['1k']?.gltf?.url || files?.gltf?.['2k']?.gltf?.url;
-    if (!modelUrl) throw new Error(`No glTF download for ${assetId}`);
-    const gltf = await gltfLoader.loadAsync(modelUrl);
+
+    // Model downloads live under modelFiles.gltf (not files.gltf). Each
+    // fileWithIncludes record also lists texture/buffer dependencies.
+    const gltfVariants = files?.modelFiles?.gltf || files?.gltf || {};
+    const preferred = isTouch ? ['1k','2k','4k'] : ['2k','1k','4k'];
+    const resolution = preferred.find((key) => gltfVariants?.[key]?.gltf?.url);
+    const modelFile = resolution ? gltfVariants[resolution].gltf : null;
+    if (!modelFile?.url) throw new Error(`No glTF download for ${assetId}`);
+
+    const includeEntries = Object.entries(modelFile.include || {})
+      .filter(([, file]) => file?.url)
+      .map(([path, file]) => [path.replace(/\\\\/g, '/').replace(/^\\.\\//, ''), file.url]);
+
+    // Resolve the exact dependency URLs supplied by Poly Haven. This prevents
+    // missing albedo/alpha/normal maps from rendering foliage as white.
+    const manager = new THREE.LoadingManager();
+    manager.setURLModifier((requestedUrl) => {
+      let pathname = requestedUrl;
+      try { pathname = decodeURIComponent(new URL(requestedUrl).pathname); } catch {}
+      pathname = pathname.replace(/\\\\/g, '/');
+      const exact = includeEntries.find(([path]) =>
+        pathname.endsWith('/' + path) || pathname.endsWith(path)
+      );
+      if (exact) return exact[1];
+
+      const basename = pathname.split('/').pop();
+      const sameName = includeEntries.filter(([path]) => path.split('/').pop() === basename);
+      return sameName.length === 1 ? sameName[0][1] : requestedUrl;
+    });
+    const loader = new GLTFLoader(manager);
+    const gltf = await loader.loadAsync(modelFile.url);
     const prototype = gltf.scene;
     prototype.updateMatrixWorld(true);
     const bounds = new THREE.Box3().setFromObject(prototype);
     const size = bounds.getSize(new THREE.Vector3());
-    if (!size.y) return;
+    if (!size.y) throw new Error(`Loaded ${assetId} has no measurable height`);
     const scale = targetHeight / size.y;
+
     for (const placement of placements) {
       const instance = prototype.clone(true);
       instance.scale.setScalar(scale * (placement.scale || 1));
       instance.position.set(placement.x, -bounds.min.y * scale * (placement.scale || 1), placement.z);
       instance.rotation.y = placement.rotation || 0;
       instance.traverse((node) => {
-        if (node.isMesh) { node.castShadow = !isTouch; node.receiveShadow = true; }
+        if (!node.isMesh) return;
+        node.castShadow = !isTouch;
+        node.receiveShadow = true;
+        if (node.material) {
+          const materials = Array.isArray(node.material) ? node.material : [node.material];
+          for (const material of materials) {
+            // Keep glTF PBR maps and alpha-tested leaf cards intact.
+            material.needsUpdate = true;
+          }
+        }
       });
       environment.add(instance);
     }
+    console.info(`Poly Haven asset loaded: ${assetId} (${resolution}, ${placements.length} instance(s), ${includeEntries.length} dependencies)`);
   } catch (error) {
-    // Tree geometry has intentionally been removed; surface a clear error if the hero model fails.
     if (assetId === 'island_tree_02') console.error('Island Tree 02 could not be loaded. Check the Poly Haven API/CDN connection.', error);
-    else console.info(`Optional world asset skipped: ${assetId}`, error);
+    else console.warn(`Poly Haven foliage asset could not be loaded: ${assetId}`, error);
   }
 }
 if (navigator.onLine) {
@@ -267,9 +304,10 @@ if (navigator.onLine) {
   // Island Tree 02 replaces the former low-poly procedural trees and palms.
   // Limit copies on touch devices to keep the detailed model affordable.
   const islandTreePlacements = [
-    {x:-24.5,z:-12,scale:1.05,rotation:.65},
-    {x:24.2,z:-3,scale:1.0,rotation:2.45},
-    {x:-25.5,z:35,scale:.92,rotation:1.8}
+    // Put the first specimen ahead of the spawn so the replacement is obvious.
+    {x:-18,z:8,scale:1.0,rotation:.65},
+    {x:22,z:14,scale:.92,rotation:2.45},
+    {x:-27,z:39,scale:.88,rotation:1.8}
   ];
   loadPolyHavenAsset('island_tree_02', isTouch ? islandTreePlacements.slice(0,1) : islandTreePlacements, 7.2);
 }
