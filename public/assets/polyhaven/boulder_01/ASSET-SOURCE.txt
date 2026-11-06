@@ -1,0 +1,5 @@
+Poly Haven asset: boulder_01
+Resolution: 1k
+License: CC0
+Source: https://polyhaven.com/a/boulder_01
+Downloaded by scripts/vendor-polyhaven-assets.mjs
