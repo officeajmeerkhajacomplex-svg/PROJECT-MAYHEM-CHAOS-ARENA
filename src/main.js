@@ -76,7 +76,7 @@ function box(x,y,z,sx,sy,sz,material,cast=true){
 const environment = new THREE.Group();
 scene.add(environment);
 const envClock = { time: 0 };
-const groundMaterial = new THREE.MeshStandardMaterial({color:0x536b58,roughness:1});
+const groundMaterial = new THREE.MeshStandardMaterial({color:0xffffff,roughness:1,map:surfaceMaps.ground});
 const ground = new THREE.Mesh(new THREE.PlaneGeometry(76,96),groundMaterial);
 ground.rotation.x=-Math.PI/2;
 ground.position.set(0,-.72,12);
@@ -88,47 +88,77 @@ environment.add(ground);
 async function loadPineForestCollection() {
   const loader = new GLTFLoader();
   loader.setMeshoptDecoder(MeshoptDecoder);
+  const toastEl = $('toast');
+  const menuStatus = $('asset-status');
+  const setStatus = (message) => {
+    if (toastEl) toastEl.textContent = message;
+    if (menuStatus) menuStatus.textContent = message;
+  };
   try {
+    setStatus('PINE FOREST // READING LOCAL ASSET MANIFEST');
     const response = await fetch('/assets/polyhaven/collection-manifest.json', { cache: 'no-cache' });
     if (!response.ok) throw new Error(`Pine Forest manifest request failed: HTTP ${response.status}`);
     const manifest = await response.json();
     if (manifest.collection !== 'pine_forest' || !Array.isArray(manifest.models) || !manifest.models.length) {
       throw new Error('Pine Forest collection manifest is empty or has the wrong collection ID');
     }
-    const models = [];
-    for (const entry of manifest.models) {
-      try {
-        const gltf = await loader.loadAsync(`/assets/polyhaven/${entry.id}/model.glb`);
-        const prototype = gltf.scene;
-        prototype.updateMatrixWorld(true);
-        const bounds = new THREE.Box3().setFromObject(prototype);
-        const size = bounds.getSize(new THREE.Vector3());
-        const height = Math.max(size.x, size.y, size.z);
-        if (!height || !Number.isFinite(height)) throw new Error('Invalid model dimensions');
-        const text = `${entry.id} ${entry.name || ''} ${entry.category || ''} ${(entry.tags || []).join(' ')}`.toLowerCase();
-        const kind = /sapling|fern|grass|moss|flower|shrub|bush|plant|vegetation/.test(text) ? 'understory'
-          : /rock|boulder|stone/.test(text) ? 'rock'
-          : /log|stump|wood|branch|root/.test(text) ? 'wood'
-          : /tree|conifer|spruce|fir|pine_tree/.test(text) ? 'tree' : 'prop';
-        models.push({ entry, prototype, bounds, height, kind });
-      } catch (error) {
-        console.error(`Pine Forest model failed to load: ${entry.id}`, error);
+
+    // Load a small number of GLBs concurrently: much faster than serial loading,
+    // without creating a burst of 80+ MB of simultaneous decode work on phones.
+    const queue = manifest.models.map((entry, index) => ({ entry, index }));
+    const loaded = new Array(queue.length);
+    let completed = 0;
+    const worker = async () => {
+      while (queue.length) {
+        const task = queue.shift();
+        try {
+          const gltf = await loader.loadAsync(`/assets/polyhaven/${task.entry.id}/model.glb`);
+          const prototype = gltf.scene;
+          prototype.updateMatrixWorld(true);
+          const bounds = new THREE.Box3().setFromObject(prototype);
+          const size = bounds.getSize(new THREE.Vector3());
+          const height = Math.max(size.x, size.y, size.z);
+          if (!height || !Number.isFinite(height)) throw new Error('Invalid model dimensions');
+          const text = `${task.entry.id} ${task.entry.name || ''} ${task.entry.category || ''} ${(task.entry.tags || []).join(' ')}`.toLowerCase();
+          const kind = /sapling|fern|grass|moss|flower|shrub|bush|plant|vegetation/.test(text) ? 'understory'
+            : /rock|boulder|stone/.test(text) ? 'rock'
+            : /log|stump|wood|branch|root|trunk/.test(text) ? 'wood'
+            : /tree|conifer|spruce|fir|pine/.test(text) ? 'tree' : 'prop';
+          loaded[task.index] = { entry: task.entry, prototype, bounds, height, kind };
+        } catch (error) {
+          console.error(`Pine Forest model failed to load: ${task.entry.id}`, error);
+          loaded[task.index] = null;
+        } finally {
+          completed++;
+          setStatus(`PINE FOREST // LOADING ${completed}/${queue.length + completed}`);
+        }
       }
-    }
+    };
+    await Promise.all(Array.from({ length: Math.min(3, queue.length) }, worker));
+    const models = loaded.filter(Boolean);
     if (!models.length) throw new Error('No Pine Forest models loaded successfully');
+
     let seed = 721;
     const random = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
     const placements = [];
     for (const model of models) {
-      const count = model.kind === 'tree' ? 8 : model.kind === 'understory' ? 5 : model.kind === 'rock' ? 4 : 3;
+      const count = model.kind === 'tree' ? 7 : model.kind === 'understory' ? 7 : model.kind === 'rock' ? 4 : model.kind === 'wood' ? 2 : 2;
       for (let i = 0; i < count; i++) {
         let x = 0, z = 0;
-        for (let attempt = 0; attempt < 12; attempt++) {
-          x = -25 + random() * 50; z = -19 + random() * 65;
-          if (Math.abs(x) > 6.2) break;
+        if (model.kind === 'tree') {
+          const side = random() > .5 ? 1 : -1;
+          x = side * (10 + random() * 15);
+          z = -17 + random() * 62;
+        } else if (model.kind === 'understory') {
+          const side = random() > .5 ? 1 : -1;
+          x = side * (5.5 + random() * 17);
+          z = -17 + random() * 62;
+        } else {
+          x = (random() > .5 ? 1 : -1) * (6 + random() * 19);
+          z = -17 + random() * 62;
         }
         const targetHeight = model.kind === 'tree' ? 8 + random() * 5
-          : model.kind === 'understory' ? .65 + random() * 1.7
+          : model.kind === 'understory' ? .55 + random() * 1.5
           : model.kind === 'rock' ? .8 + random() * 2.4
           : model.kind === 'wood' ? 1.2 + random() * 2.5 : 1.5 + random() * 3;
         placements.push({ model, x, z, scale: targetHeight / model.height, rotation: random() * Math.PI * 2 });
@@ -151,13 +181,12 @@ async function loadPineForestCollection() {
       });
       environment.add(instance);
     }
-    console.info(`Pine Forest instantiated: ${models.length}/${manifest.models.length} models, ${placements.length} placements`);
-    const toastEl = $('toast');
-    if (toastEl) toastEl.textContent = `PINE FOREST // ${models.length} ASSETS LOADED`;
+    const message = `PINE FOREST // ${models.length}/${manifest.models.length} MODELS · ${placements.length} PLACEMENTS`;
+    console.info(message);
+    setStatus(message);
   } catch (error) {
     console.error('Pine Forest collection failed to load', error);
-    const toastEl = $('toast');
-    if (toastEl) toastEl.textContent = 'ENVIRONMENT ASSETS FAILED TO LOAD';
+    setStatus('ENVIRONMENT ASSETS FAILED // CHECK CONNECTION AND RELOAD');
   }
 }
 loadPineForestCollection();
