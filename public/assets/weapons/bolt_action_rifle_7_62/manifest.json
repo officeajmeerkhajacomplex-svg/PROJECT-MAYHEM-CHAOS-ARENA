@@ -1,0 +1,11 @@
+{
+  "id": "bolt_action_rifle_7_62",
+  "name": "Bolt Action Rifle 7.62",
+  "author": "Mateusz Sadek",
+  "source": "https://polyhaven.com/a/bolt_action_rifle_7_62",
+  "license": "CC0",
+  "resolution": "2k",
+  "format": "GLB / Meshopt / WebP",
+  "sourceDependencyCount": 7,
+  "bytes": 4089708
+}

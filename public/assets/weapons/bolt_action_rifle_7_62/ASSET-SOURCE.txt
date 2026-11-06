@@ -1,0 +1,5 @@
+Poly Haven asset: Bolt Action Rifle 7.62
+Author: Mateusz Sadek
+License: CC0
+Source: https://polyhaven.com/a/bolt_action_rifle_7_62
+Optimized as self-contained Meshopt GLB with WebP textures.
