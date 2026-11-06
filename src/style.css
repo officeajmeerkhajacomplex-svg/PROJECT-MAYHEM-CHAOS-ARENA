@@ -27,3 +27,8 @@ button{font:800 18px 'Arial Narrow',Impact,sans-serif;letter-spacing:.12em;borde
 #stick div{width:13px;height:13px;border-radius:50%;background:#caffd1}
 .compact{max-width:380px;text-align:center}.compact h2{font:900 42px 'Arial Narrow',Impact,sans-serif}
 @media(max-width:700px){.hud-top{padding:12px;font-size:9px}.brand{font-size:14px}#objective{max-width:120px;text-align:center}.hud-bottom{bottom:180px;left:14px;right:14px}.health{width:120px}.health strong,.weapon strong{font-size:28px}.weapon small{font-size:9px}.weapon em{font-size:13px}.health span{font-size:9px}.mobile-actions{right:12px;bottom:20px;gap:6px}.mobile-actions button{font-size:10px;min-width:54px;padding:11px 8px}#stick-zone{left:12px;bottom:20px;width:126px;height:126px}.controls-note{font-size:9px}}
+
+.stamina-label{font-size:9px;letter-spacing:.16em;color:#9de5ac;margin-top:8px}
+.bar.stamina{height:3px;background:#263a32;margin-top:3px}
+.bar.stamina i{width:100%;background:#f4c66e;transition:width .12s}
+@media(max-width:700px){.stamina-label{font-size:8px}.mobile-actions #slide{background:#a5f3adbb}}
