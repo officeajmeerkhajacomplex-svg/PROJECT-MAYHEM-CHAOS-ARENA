@@ -1,4 +1,5 @@
-import { mkdir, writeFile, readdir, rm } from 'node:fs/promises';
+import { mkdir, writeFile, readdir, rm, stat } from 'node:fs/promises';
+import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 
 const API = 'https://api.polyhaven.com';
@@ -57,8 +58,27 @@ for (const [id, metadata] of entries) {
     totalBytes += await download(file.url, path.join(folder, safeRelative(relative)));
     dependencyCount += 1;
   }
-  await writeFile(path.join(folder, 'ASSET-SOURCE.txt'), sourceNote(id));
-  collectionBytes += totalBytes;
+  // Produce a self-contained optimized GLB; GitHub rejects individual files over 100 MB.
+  const sourceModel = path.join(folder, 'model.gltf');
+  const optimizedModel = path.join(folder, 'model.glb');
+  const optimize = (ratio) => execFileSync('gltf-transform', [
+    'optimize', sourceModel, optimizedModel,
+    '--compress', 'meshopt', '--texture-compress', 'webp', '--texture-size', '1024',
+    '--simplify', 'true', '--simplify-ratio', String(ratio), '--simplify-error', '1'
+  ], { stdio: 'inherit' });
+  optimize(0.12);
+  let optimizedBytes = (await stat(optimizedModel)).size;
+  if (optimizedBytes > 85 * 1024 * 1024) {
+    console.warn('Optimized ' + id + ' is still large; simplifying further.');
+    optimize(0.04);
+    optimizedBytes = (await stat(optimizedModel)).size;
+  }
+  if (optimizedBytes > 95 * 1024 * 1024) throw new Error('Optimized model ' + id + ' remains too large for GitHub: ' + (optimizedBytes / 1024 / 1024).toFixed(1) + ' MiB');
+  for (const item of await readdir(folder, { withFileTypes: true })) {
+    if (item.name !== 'model.glb') await rm(path.join(folder, item.name), { recursive: true, force: true });
+  }
+  await writeFile(path.join(folder, 'ASSET-SOURCE.txt'), sourceNote(id) + 'Optimized: Meshopt geometry, simplified mesh, WebP textures; self-contained model.glb.\\n');
+  collectionBytes += optimizedBytes;
   manifest.push({
     id,
     name: metadata.name || id,
@@ -66,8 +86,11 @@ for (const [id, metadata] of entries) {
     category: metadata.category || '',
     tags: metadata.tags || [],
     resolution,
-    dependencies: dependencyCount,
-    bytes: totalBytes
+    dependencies: 0,
+    output: 'model.glb',
+    optimized: true,
+    sourceDependencyCount: dependencyCount,
+    bytes: optimizedBytes
   });
   console.log(`Vendored ${id}: ${(totalBytes / 1024 / 1024).toFixed(2)} MiB, ${dependencyCount} dependencies`);
 }
@@ -84,9 +107,10 @@ await mkdir(root, { recursive: true });
 await writeFile(path.join(root, 'collection-manifest.json'), JSON.stringify({
   collection: COLLECTION,
   source: 'https://polyhaven.com/collections/pine_forest',
+  format: 'GLB with Meshopt-compressed geometry and WebP textures',
   license: 'CC0',
   modelCount: manifest.length,
   models: manifest
 }, null, 2) + '\n');
 
-console.log(`Pine Forest complete: ${manifest.length} models, ${(collectionBytes / 1024 / 1024).toFixed(2)} MiB total`);
+console.log(`Pine Forest complete: ${manifest.length} optimized models, ${(collectionBytes / 1024 / 1024).toFixed(2)} MiB total`);
