@@ -31,11 +31,16 @@ jobs:
         run: npm install --global @gltf-transform/cli@4.5.1
       - name: Download, optimize, and vendor Pine Forest models
         run: node scripts/vendor-polyhaven-assets.mjs
+      - name: Download CC0 Poly Haven sky HDRI
+        run: |
+          mkdir -p public/assets/hdri
+          curl --fail --location --retry 3 --output public/assets/hdri/qwantani_mid_morning_puresky_2k.hdr https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/qwantani_mid_morning_puresky_2k.hdr
+          test -s public/assets/hdri/qwantani_mid_morning_puresky_2k.hdr
       - name: Commit vendored assets
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add public/assets/polyhaven
+          git add public/assets/polyhaven public/assets/hdri
           if git diff --cached --quiet; then
             echo "Assets already up to date"
           else
