@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile, readdir, rm } from 'node:fs/promises';
 import path from 'node:path';
 
 const API = 'https://api.polyhaven.com';
@@ -72,6 +72,13 @@ for (const [id, metadata] of entries) {
   console.log(`Vendored ${id}: ${(totalBytes / 1024 / 1024).toFixed(2)} MiB, ${dependencyCount} dependencies`);
 }
 
+// Remove assets from the previously selected collection so Pine Forest is the only active vendored set.
+const currentIds = new Set(manifest.map((asset) => asset.id));
+for (const item of await readdir(root, { withFileTypes: true }).catch(() => [])) {
+  if (item.isDirectory() && !currentIds.has(item.name)) {
+    await rm(path.join(root, item.name), { recursive: true, force: true });
+  }
+}
 manifest.sort((a, b) => a.id.localeCompare(b.id));
 await mkdir(root, { recursive: true });
 await writeFile(path.join(root, 'collection-manifest.json'), JSON.stringify({
